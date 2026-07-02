@@ -3,6 +3,8 @@ import { createRoot } from 'react-dom/client'
 import { Amplify } from 'aws-amplify'
 import './styles/global.css'
 import { App } from './App'
+import { ErrorBoundary } from './components/ErrorBoundary'
+import { ToastProvider } from './components/Toast'
 
 Amplify.configure({
   Auth: {
@@ -15,6 +17,10 @@ Amplify.configure({
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    <ErrorBoundary>
+      <ToastProvider>
+        <App />
+      </ToastProvider>
+    </ErrorBoundary>
   </StrictMode>
 )
