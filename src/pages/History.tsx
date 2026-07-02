@@ -4,7 +4,7 @@ import { ArrowLeft } from 'lucide-react'
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, ReferenceLine,
-  BarChart, Bar, Cell,
+  BarChart, Bar, Cell, LabelList,
 } from 'recharts'
 import { ThemeToggle } from '../components/ThemeToggle'
 import { listHistory } from '../services/api'
@@ -238,7 +238,7 @@ export function History() {
                 <div className="md:col-span-2 rounded-xl border border-border bg-card p-4 space-y-3">
                   <h3 className="font-sans text-sm font-semibold text-foreground">Desempenho por domínio</h3>
                   <ResponsiveContainer width="100%" height={Math.max(160, domainData.length * 36)}>
-                    <BarChart data={domainData} layout="vertical" margin={{ top: 0, right: 24, left: 0, bottom: 0 }}>
+                    <BarChart data={domainData} layout="vertical" margin={{ top: 0, right: 44, left: 0, bottom: 0 }}>
                       <XAxis type="number" domain={[0, 100]} tick={{ fill: chartTick, fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={v => `${v}%`} />
                       <YAxis type="category" dataKey="domain" width={110} tick={{ fill: chartTick, fontSize: 10 }} axisLine={false} tickLine={false} />
                       <Tooltip content={<DomainTooltip />} />
@@ -246,6 +246,7 @@ export function History() {
                         {domainData.map((entry) => (
                           <Cell key={entry.domain} fill={barFill(entry.pct)} />
                         ))}
+                        <LabelList dataKey="pct" position="right" formatter={(v: unknown) => `${v}%`} style={{ fill: chartTick, fontSize: 10 }} />
                       </Bar>
                     </BarChart>
                   </ResponsiveContainer>

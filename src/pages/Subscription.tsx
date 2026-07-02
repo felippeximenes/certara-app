@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, Zap, Crown, Check, X, RefreshCw } from 'lucide-react'
 import { ThemeToggle } from '../components/ThemeToggle'
 import { getSubscription, createCheckoutSession, cancelSubscription, createPortalSession } from '../services/api'
+import { trackEvent } from '../services/analytics'
 import { cn } from '@/lib/utils'
 import type { SubscriptionStatus } from '../types/quiz'
 
@@ -85,9 +86,11 @@ export function Subscription() {
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function handleUpgrade() {
+    trackEvent('subscription_clicked', { plan: 'premium' })
     setCheckoutLoading(true)
     setError('')
     try {
+      trackEvent('checkout_started')
       const url = await createCheckoutSession()
       window.location.href = url
     } catch {
@@ -285,7 +288,7 @@ export function Subscription() {
                     {isPremium && <span className="rounded-full bg-primary/15 px-2 py-0.5 text-xs font-semibold text-primary">Atual</span>}
                   </div>
                   <div className="flex items-end gap-1">
-                    <p className="font-sans text-2xl font-extrabold text-foreground">R$ 9,90</p>
+                    <p className="font-sans text-2xl font-extrabold text-foreground">R$ 29,90</p>
                     <p className="mb-0.5 text-xs text-muted-foreground">/mês</p>
                   </div>
                 </div>
@@ -310,7 +313,7 @@ export function Subscription() {
                 {checkoutLoading ? (
                   <><RefreshCw className="h-4 w-4 animate-spin" /> Abrindo checkout...</>
                 ) : (
-                  <><Crown className="h-4 w-4" /> Assinar Premium — R$ 9,90/mês</>
+                  <><Crown className="h-4 w-4" /> Assinar Premium — R$ 29,90/mês</>
                 )}
               </button>
             )}

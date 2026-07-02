@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Check, AlertCircle, Loader2 } from 'lucide-react'
+import { Check, AlertCircle, Loader2, Eye, EyeOff } from 'lucide-react'
 import { register, confirmEmail, login, resendCode } from '../services/auth'
 import { useAuthStore } from '../store/authStore'
 import { ThemeToggle } from '../components/ThemeToggle'
 import { Logo } from '../components/Logo'
+import { trackEvent } from '../services/analytics'
 import { cn } from '@/lib/utils'
 
 type Mode = 'login' | 'register' | 'confirm'
@@ -32,12 +33,15 @@ export function Login() {
   const [code, setCode] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [showPass, setShowPass] = useState(false)
+  const [showConfirmPass, setShowConfirmPass] = useState(false)
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault(); setError(''); setLoading(true)
     try {
       await login(email, password)
       setEmail(email)
+      trackEvent('login', { method: 'email' })
       navigate('/app')
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Erro ao entrar')
@@ -50,6 +54,7 @@ export function Login() {
     setLoading(true)
     try {
       await register(email, password)
+      trackEvent('register')
       setMode('confirm')
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Erro ao criar conta')
@@ -81,6 +86,7 @@ export function Login() {
     'focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20',
     'dark:border-[#312E81] transition-colors duration-150',
   )
+  const passInputClass = cn(inputClass, 'pr-10')
 
   const btnClass =
     'flex w-full items-center justify-center gap-2 rounded-[10px] bg-primary py-3 text-sm font-bold text-white hover:bg-primary-hover disabled:opacity-40 transition-colors duration-150'
@@ -182,11 +188,15 @@ export function Login() {
 
           {/* Error */}
           {error && (
-            <div className={cn(
-              'flex items-center gap-2 text-sm',
-              error.includes('enviado') ? 'text-success' : 'text-danger',
-            )}>
-              <AlertCircle className="h-4 w-4 flex-shrink-0" />
+            <div
+              role="alert"
+              aria-live="assertive"
+              className={cn(
+                'flex items-center gap-2 text-sm',
+                error.includes('enviado') ? 'text-success' : 'text-danger',
+              )}
+            >
+              <AlertCircle className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
               <span>{error}</span>
             </div>
           )}
@@ -203,7 +213,12 @@ export function Login() {
                   <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Senha</span>
                   <button type="button" className="text-xs text-primary hover:underline">Esqueci a senha</button>
                 </div>
-                <input type="password" value={password} onChange={e => setPassword(e.target.value)} required className={inputClass} placeholder="••••••••" />
+                <div className="relative">
+                  <input type={showPass ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} required className={passInputClass} placeholder="••••••••" />
+                  <button type="button" onClick={() => setShowPass(v => !v)} aria-label={showPass ? 'Ocultar senha' : 'Mostrar senha'} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
+                    {showPass ? <EyeOff className="h-4 w-4" aria-hidden="true" /> : <Eye className="h-4 w-4" aria-hidden="true" />}
+                  </button>
+                </div>
               </label>
               <button type="submit" disabled={loading} className={btnClass}>
                 {loading ? <><Loader2 className="h-4 w-4 animate-spin" /> Entrando…</> : 'Entrar'}
@@ -220,11 +235,21 @@ export function Login() {
               </label>
               <label className="block space-y-1.5">
                 <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Senha (mín. 8 caracteres)</span>
-                <input type="password" value={password} onChange={e => setPassword(e.target.value)} required minLength={8} className={inputClass} placeholder="••••••••" />
+                <div className="relative">
+                  <input type={showPass ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} required minLength={8} className={passInputClass} placeholder="••••••••" />
+                  <button type="button" onClick={() => setShowPass(v => !v)} aria-label={showPass ? 'Ocultar senha' : 'Mostrar senha'} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
+                    {showPass ? <EyeOff className="h-4 w-4" aria-hidden="true" /> : <Eye className="h-4 w-4" aria-hidden="true" />}
+                  </button>
+                </div>
               </label>
               <label className="block space-y-1.5">
                 <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Confirmar senha</span>
-                <input type="password" value={confirm} onChange={e => setConfirm(e.target.value)} required minLength={8} className={inputClass} placeholder="••••••••" />
+                <div className="relative">
+                  <input type={showConfirmPass ? 'text' : 'password'} value={confirm} onChange={e => setConfirm(e.target.value)} required minLength={8} className={passInputClass} placeholder="••••••••" />
+                  <button type="button" onClick={() => setShowConfirmPass(v => !v)} aria-label={showConfirmPass ? 'Ocultar confirmação de senha' : 'Mostrar confirmação de senha'} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
+                    {showConfirmPass ? <EyeOff className="h-4 w-4" aria-hidden="true" /> : <Eye className="h-4 w-4" aria-hidden="true" />}
+                  </button>
+                </div>
               </label>
               <button type="submit" disabled={loading} className={btnClass}>
                 {loading ? <><Loader2 className="h-4 w-4 animate-spin" /> Criando conta…</> : 'Criar conta'}

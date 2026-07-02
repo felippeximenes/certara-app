@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { RotateCcw, History } from 'lucide-react'
+import html2canvas from 'html2canvas'
+import { RotateCcw, History, Image, ClipboardCopy, MessageCircle, ExternalLink } from 'lucide-react'
 import { ThemeToggle } from '../components/ThemeToggle'
 import { SubjectBadge } from '../components/SubjectBadge'
 import { useQuizStore } from '../store/quizStore'
@@ -16,9 +17,13 @@ export function Result() {
   const score = useQuizStore((s) => s.score)
   const answers = useQuizStore((s) => s.answers)
   const reset = useQuizStore((s) => s.reset)
+  const certification = useQuizStore((s) => s.certification)
 
   const [summary, setSummary] = useState<ApiSummary | null>(null)
   const [loading, setLoading] = useState(true)
+  const [copying, setCopying] = useState(false)
+  const [copied, setCopied] = useState<'image' | 'text' | null>(null)
+  const shareCardRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!subject) { navigate('/app'); return }
@@ -39,6 +44,42 @@ export function Result() {
   const scoreColor = pct >= 80 ? 'text-success' : pct >= 50 ? 'text-warning' : 'text-danger'
   const scoreBorder = pct >= 80 ? 'border-success/20 bg-success/5' : pct >= 50 ? 'border-warning/20 bg-warning/5' : 'border-danger/20 bg-danger/5'
   const pctBadge = pct >= 80 ? 'bg-success/15 text-success' : pct >= 50 ? 'bg-warning/15 text-warning' : 'bg-danger/15 text-danger'
+
+  const shareText = `Acabei de completar um quiz no Certara! 🎯\n✅ Score: ${score}/${TOTAL} (${pct}%)\n📚 Certificação: ${certification || 'AWS'}\n\nEstude em: https://certara.com.br`
+  const waUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`
+  const liUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent('https://certara.com.br')}`
+
+  async function copyImage() {
+    if (!shareCardRef.current) return
+    setCopying(true)
+    try {
+      const canvas = await html2canvas(shareCardRef.current, { scale: 2 })
+      canvas.toBlob(async (blob) => {
+        if (!blob) { setCopying(false); return }
+        try {
+          await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
+          setCopied('image')
+        } catch {
+          const url = URL.createObjectURL(blob)
+          const a = document.createElement('a')
+          a.href = url
+          a.download = 'certara-resultado.png'
+          a.click()
+          URL.revokeObjectURL(url)
+        }
+        setCopying(false)
+        setTimeout(() => setCopied(null), 2500)
+      })
+    } catch {
+      setCopying(false)
+    }
+  }
+
+  async function copyText() {
+    await navigator.clipboard.writeText(shareText)
+    setCopied('text')
+    setTimeout(() => setCopied(null), 2500)
+  }
 
   return (
     <div className="flex min-h-svh flex-col bg-background">
@@ -151,7 +192,108 @@ export function Result() {
             Ver Histórico
           </button>
         </div>
+
+        {/* Share section */}
+        <div className="space-y-3">
+          <p className="text-center text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+            Compartilhar resultado
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={copyImage}
+              disabled={copying}
+              className="flex items-center justify-center gap-2 rounded-xl border border-border bg-card py-2.5 font-sans text-sm font-semibold text-foreground transition-colors hover:border-primary/40 hover:text-primary disabled:opacity-60"
+            >
+              {copying ? (
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+              ) : (
+                <Image className="h-4 w-4" />
+              )}
+              {copied === 'image' ? 'Copiado!' : 'Copiar imagem'}
+            </button>
+            <button
+              onClick={copyText}
+              className="flex items-center justify-center gap-2 rounded-xl border border-border bg-card py-2.5 font-sans text-sm font-semibold text-foreground transition-colors hover:border-primary/40 hover:text-primary"
+            >
+              <ClipboardCopy className="h-4 w-4" />
+              {copied === 'text' ? 'Copiado!' : 'Copiar texto'}
+            </button>
+            <a
+              href={waUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 rounded-xl border border-border bg-card py-2.5 font-sans text-sm font-semibold text-foreground transition-colors hover:border-[#25D366]/50 hover:text-[#25D366]"
+            >
+              <MessageCircle className="h-4 w-4" />
+              WhatsApp
+            </a>
+            <a
+              href={liUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 rounded-xl border border-border bg-card py-2.5 font-sans text-sm font-semibold text-foreground transition-colors hover:border-[#0A66C2]/50 hover:text-[#0A66C2]"
+            >
+              <ExternalLink className="h-4 w-4" />
+              LinkedIn
+            </a>
+          </div>
+        </div>
       </main>
+
+      {/* Hidden share card captured by html2canvas */}
+      <div
+        ref={shareCardRef}
+        style={{
+          position: 'absolute',
+          left: -9999,
+          top: -9999,
+          width: 480,
+          height: 252,
+          background: 'linear-gradient(135deg, #3B39E8 0%, #0F0E2E 100%)',
+          padding: '28px 32px',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+          fontFamily: 'system-ui, sans-serif',
+          boxSizing: 'border-box',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <rect x="0" y="14.4" width="6" height="9.6" rx="3" fill="rgba(255,255,255,0.7)" />
+            <rect x="9" y="7.2" width="6" height="16.8" rx="3" fill="rgba(255,255,255,0.9)" />
+            <rect x="18" y="0" width="6" height="24" rx="3" fill="#22C55E" />
+          </svg>
+          <span style={{ color: '#fff', fontSize: 16, fontWeight: 700 }}>Certara</span>
+        </div>
+
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+            <span style={{ color: '#fff', fontSize: 64, fontWeight: 900, lineHeight: 1 }}>{score}</span>
+            <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: 24, fontWeight: 600 }}>/{TOTAL}</span>
+          </div>
+          <div style={{ height: 8, borderRadius: 4, background: 'rgba(255,255,255,0.2)', width: '100%' }}>
+            <div style={{ height: '100%', borderRadius: 4, background: '#22C55E', width: `${pct}%` }} />
+          </div>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <span
+              style={{
+                background: 'rgba(255,255,255,0.15)',
+                color: '#fff',
+                fontSize: 12,
+                fontWeight: 600,
+                padding: '4px 10px',
+                borderRadius: 20,
+              }}
+            >
+              {certification || 'AWS'}
+            </span>
+            <span style={{ color: '#22C55E', fontSize: 14, fontWeight: 700 }}>{pct}%</span>
+          </div>
+        </div>
+
+        <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12 }}>Estude no certara.com.br</div>
+      </div>
     </div>
   )
 }

@@ -6,6 +6,7 @@ import { ProgressBar } from '../components/ProgressBar'
 import { useQuizStore } from '../store/quizStore'
 import { generateQuestion, evaluateAnswer } from '../services/api'
 import { getCertification } from '../data/certifications'
+import { trackEvent } from '../services/analytics'
 import { cn } from '@/lib/utils'
 import type { ApiQuestion, ApiFeedback } from '../types/quiz'
 
@@ -47,6 +48,7 @@ export function Quiz() {
 
   useEffect(() => {
     if (!subject || !certification) { navigate('/app'); return }
+    trackEvent('quiz_started', { certification, difficulty })
     fetchQuestion(0)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -67,8 +69,15 @@ export function Quiz() {
   }
 
   function handleNext() {
-    if (isLastQuestion) { storeSetScore(localScore); navigate('/resultado') }
-    else { const next = currentQ + 1; setCurrentQ(next); fetchQuestion(next) }
+    if (isLastQuestion) {
+      trackEvent('quiz_completed', { certification, difficulty, score: localScore, pct: Math.round((localScore / TOTAL) * 100) })
+      storeSetScore(localScore)
+      navigate('/resultado')
+    } else {
+      const next = currentQ + 1
+      setCurrentQ(next)
+      fetchQuestion(next)
+    }
   }
 
   const correctIndex = question ? getCorrectIndex(question.answer) : -1
@@ -90,7 +99,7 @@ export function Quiz() {
 
   if (error) return (
     <div className="flex min-h-svh flex-col items-center justify-center gap-4 p-4">
-      <p className="text-sm text-muted-foreground">{error}</p>
+      <p role="alert" aria-live="assertive" className="text-sm text-muted-foreground">{error}</p>
       <button onClick={() => fetchQuestion(currentQ)} className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white">
         <RotateCcw className="h-4 w-4" /> Tentar novamente
       </button>
@@ -143,7 +152,7 @@ export function Quiz() {
                   disabled={phase === 'evaluating' || phase === 'feedback'}
                   className={cn(
                     'w-full flex items-center gap-3 rounded-xl border px-4 py-3.5 text-left text-sm',
-                    'transition-all duration-150 disabled:cursor-default',
+                    'transition-all duration-150 cursor-pointer disabled:cursor-default',
                     optionClass[state],
                   )}
                 >

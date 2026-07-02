@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { History, LogOut, Zap, Star, Trophy, Crown, Flame, Target, Layers, BookOpen } from 'lucide-react'
 import { ThemeToggle } from '../components/ThemeToggle'
 import { Logo } from '../components/Logo'
+import { Onboarding } from '../components/Onboarding'
+import { NotificationBell, seedNotifications } from '../components/NotificationBell'
 import { useQuizStore } from '../store/quizStore'
 import { useAuthStore } from '../store/authStore'
 import { CERTIFICATIONS } from '../data/certifications'
@@ -65,11 +67,17 @@ export function Home() {
   const [sub, setSub] = useState<SubscriptionStatus | null>(null)
   const [history, setHistory] = useState<QuizHistoryItem[]>([])
   const [historyLoading, setHistoryLoading] = useState(true)
+  const [showOnboarding, setShowOnboarding] = useState(
+    () => localStorage.getItem('certara_onboarding_done') === null,
+  )
 
   useEffect(() => {
     getSubscription().then(setSub).catch(() => null)
     listHistory()
-      .then(setHistory)
+      .then((items) => {
+        setHistory(items)
+        seedNotifications(items, calcStreak(items))
+      })
       .catch(() => {})
       .finally(() => setHistoryLoading(false))
   }, [])
@@ -103,6 +111,8 @@ export function Home() {
 
   return (
     <div className="flex min-h-svh flex-col bg-background">
+      {showOnboarding && <Onboarding onDone={() => setShowOnboarding(false)} />}
+
       {/* Header */}
       <header className="sticky top-0 z-10 border-b border-border bg-card/80 backdrop-blur-sm">
         <div className="mx-auto flex max-w-2xl items-center justify-between px-4 py-3">
@@ -134,6 +144,7 @@ export function Home() {
               <History className="h-3.5 w-3.5" />
               Histórico
             </button>
+            <NotificationBell />
             <ThemeToggle />
             <button
               onClick={handleLogout}

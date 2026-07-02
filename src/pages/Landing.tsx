@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import {
   BookOpen, Brain, TrendingUp,
   Zap, MessageSquare, Clock, BarChart2, Star, Globe,
@@ -330,8 +330,8 @@ export function Landing() {
           <Logo size="sm" />
           <p className="text-xs text-muted-foreground">© 2025 Certara. Todos os direitos reservados.</p>
           <div className="flex gap-4 text-xs text-muted-foreground">
-            <a href="#" className="hover:text-primary transition-colors">Termos de uso</a>
-            <a href="#" className="hover:text-primary transition-colors">Política de privacidade</a>
+            <Link to="/termos" className="hover:text-primary transition-colors">Termos de uso</Link>
+            <Link to="/privacidade" className="hover:text-primary transition-colors">Política de privacidade</Link>
           </div>
         </div>
       </footer>
