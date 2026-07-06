@@ -376,7 +376,7 @@ export function Home() {
 
         {/* Content */}
         <main className="flex-1">
-          <div className="max-w-5xl mx-auto px-4 lg:px-8 py-6 pb-16 space-y-5">
+          <div className="w-full px-5 lg:px-8 py-6 pb-16 space-y-5">
 
             {/* Page heading */}
             <div>
