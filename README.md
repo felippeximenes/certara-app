@@ -8,21 +8,23 @@ Plataforma de preparação para certificações AWS com questões geradas por In
 
 ## Telas
 
-### Login
-![Login](screenshots/01-login-desktop.png)
+### Landing Page — Hero fullscreen com cena 3D
+![Landing](screenshots/01-landing-desktop.png)
 
-### Home — Seleção de certificação e dificuldade
+### Login — Painel 3D com hexágonos flutuantes
+![Login](screenshots/02-login-desktop.png)
+
+### Home — Dashboard com badges e seleção inline
 ![Home](screenshots/03-home-desktop.png)
 
 ### Quiz — Questão com progresso
-![Quiz](screenshots/05-quiz-desktop.png)
+![Quiz](screenshots/04-quiz-desktop.png)
 
 ### Feedback da IA após resposta
-![Feedback](screenshots/07-quiz-feedback-desktop.png)
+![Feedback](screenshots/05-quiz-feedback-desktop.png)
 
-### Histórico (light e dark mode)
-![Histórico desktop](screenshots/09-history-desktop.png)
-![Histórico mobile dark](screenshots/10-history-dark-mobile.png)
+### Histórico
+![Histórico](screenshots/06-history-desktop.png)
 
 ---
 
@@ -30,17 +32,43 @@ Plataforma de preparação para certificações AWS com questões geradas por In
 
 ### Núcleo
 - **3 certificações**: CLF-C02 (Cloud Practitioner), SAA-C03 (Solutions Architect), DVA-C02 (Developer)
-- **3 dificuldades**: Fácil, Médio, Difícil
+- **3 dificuldades**: Fácil, Médio, Difícil — seleção inline (accordion) logo abaixo da cert escolhida
 - **10 questões por quiz**, geradas em tempo real pelo Amazon Bedrock
 - **Feedback com IA** após cada resposta: explicação, links de estudo e tópico
 - **Resumo final** com análise de desempenho e plano de estudo personalizado
 - **Histórico completo** com placar, percentual e breakdown por domínio
 
+### Landing Page
+- Hero fullscreen (`min-h-dvh`) com cena 3D de hexágonos AWS flutuando sobre o card de quiz
+- Navbar glassmorphism flutuante (`backdrop-blur-[18px]`) com pill container, transparente em repouso e opaco ao rolar
+- Animações de entrada por scroll (`motion/react`): `fadeUp`, `slideLeft`, `slideRight`, `scaleIn` com efeitos distintos por seção
+- Coluna de depoimentos com scroll infinito automático em 3 colunas
+- Seções: Hero → Stats → Como funciona → Features → Preços → CTA
+
+### Login
+- Layout split: painel esquerdo com cena 3D (hexágonos SAA/CLF/DVA flutuando + parallax no mouse), painel direito com formulário
+- Formulários de **Entrar** e **Criar conta** em tab toggle com pill deslizante
+- Barra de força da senha com 4 segmentos coloridos
+- SSO Google (placeholder) com botão full-width
+- Validação Cognito: cadastro → confirmação por e-mail → login
+- Visual inteiramente em light mode fixo
+
+### Home (Dashboard)
+- **Badges hexagonais AWS** com gradiente por certificação (âmbar CLF, azul SAA, verde DVA)
+- **Seleção inline de dificuldade**: clicar em uma certificação expande o card accordion com os 3 níveis logo abaixo, sem scroll
+- **TrackEmptyState**: card de criação de trilha de estudos com IA ligado à rota `/plano-de-estudos`
+- Stats: quizzes feitos, média geral, melhor score, sequência diária
+- Gráfico de evolução de desempenho (SVG inline)
+- Domínios mais fracos com barras de progresso coloridas
+- Plano IA baseado no histórico + ferramentas rápidas (Simulado, Flashcards, Plano, Histórico)
+- Banner hero com Ring de prontidão (SVG animado)
+
 ### UX
-- Dark mode com toggle persistente
+- **Light mode fixo** — dark mode removido globalmente
 - Layout responsivo (mobile, tablet, desktop)
 - Barra de progresso visual durante o quiz
-- Animações suaves (Tailwind Animate)
+- `prefers-reduced-motion` respeitado em todas as animações
+- Efeito parallax 3D no mouse (login e hero)
 
 ### Autenticação
 - Cadastro e login via **AWS Cognito**
@@ -72,9 +100,11 @@ Plataforma de preparação para certificações AWS com questões geradas por In
 | Vite | Build e dev server |
 | Tailwind CSS v3 | Estilização (design system "Mente Clara") |
 | React Router v6 | Roteamento SPA |
+| motion/react v12 | Animações declarativas com scroll triggers |
 | AWS Amplify v6 | Autenticação Cognito |
 | Zustand | Estado global |
-| Lucide React | Ícones |
+| Lucide React | Ícones SVG |
+| CSS 3D transforms | Cenas de hexágonos flutuantes (login + hero) |
 
 **Deploy:** Vercel (CI/CD automático a partir do branch `main`)
 
@@ -155,26 +185,48 @@ Bedrock Bedrock DynamoDB DynamoDB DynamoDB
 quizzapp/
 ├── src/
 │   ├── pages/
-│   │   ├── Login.tsx          # Auth (login + cadastro)
-│   │   ├── Home.tsx           # Seleção de cert e dificuldade
-│   │   ├── Quiz.tsx           # Quiz com 10 questões
-│   │   ├── Result.tsx         # Resultado e resumo IA
-│   │   ├── History.tsx        # Histórico de quizzes
-│   │   └── Subscription.tsx   # Gerenciamento de assinatura
+│   │   ├── Landing.tsx          # Landing page pública com hero 3D e animações
+│   │   ├── Login.tsx            # Auth (login + cadastro) com painel 3D parallax
+│   │   ├── Home.tsx             # Dashboard: badges, stats, seleção inline
+│   │   ├── Quiz.tsx             # Quiz com 10 questões e progresso
+│   │   ├── Result.tsx           # Resultado e resumo IA
+│   │   ├── History.tsx          # Histórico de quizzes
+│   │   ├── StudyPlan.tsx        # Plano de estudos gerado por IA
+│   │   ├── Flashcards.tsx       # Flashcards de revisão
+│   │   ├── Simulation.tsx       # Modo simulado (65 questões)
+│   │   └── Subscription.tsx     # Gerenciamento de assinatura
 │   ├── components/
-│   │   ├── ProtectedRoute.tsx
-│   │   ├── ThemeToggle.tsx
-│   │   ├── ProgressBar.tsx
-│   │   └── SubjectBadge.tsx
+│   │   ├── ui/
+│   │   │   ├── hero-section-dark.tsx    # Hero fullscreen com RetroGrid
+│   │   │   └── testimonials-columns-1.tsx # Colunas com scroll infinito
+│   │   ├── FloatingHex.tsx      # Hexágono 3D flutuante (login)
+│   │   ├── HeroHex.tsx          # Hexágono 3D flutuante (hero)
+│   │   ├── HeroScene.tsx        # Cena 3D completa do hero (hexes + card quiz)
+│   │   ├── Logo.tsx             # Logotipo do projeto
+│   │   ├── Onboarding.tsx       # Tour de boas-vindas
+│   │   ├── NotificationBell.tsx # Sino de notificações
+│   │   └── ProtectedRoute.tsx   # Guard de autenticação
+│   ├── hooks/
+│   │   ├── useParallax.ts       # Mouse parallax para cenas 3D
+│   │   └── useTheme.ts          # Light mode fixo (dark removido)
+│   ├── styles/
+│   │   ├── login3d.css          # CSS 3D da cena do login (.scene/.stage/.fhex)
+│   │   └── hero3d.css           # CSS 3D da cena do hero (.hscene/.hstage/.hfhex)
 │   ├── services/
-│   │   ├── api.ts             # Chamadas ao backend
-│   │   └── auth.ts            # Helpers Cognito/Amplify
+│   │   ├── api.ts               # Chamadas ao backend
+│   │   ├── auth.ts              # Helpers Cognito/Amplify
+│   │   └── analytics.ts         # Eventos de analytics
+│   ├── store/
+│   │   ├── authStore.ts         # Estado de autenticação (Zustand)
+│   │   └── quizStore.ts         # Estado do quiz (Zustand)
+│   ├── data/
+│   │   └── certifications.ts    # Metadados das 3 certificações AWS
 │   ├── types/
-│   │   └── quiz.ts            # Tipos TypeScript
-│   └── App.tsx                # Rotas
+│   │   └── quiz.ts              # Tipos TypeScript
+│   └── App.tsx                  # Rotas
 ├── backend/
-│   ├── template.yaml          # SAM (infraestrutura)
-│   ├── samconfig.toml         # Parâmetros de deploy (gitignored)
+│   ├── template.yaml            # SAM (infraestrutura)
+│   ├── samconfig.toml           # Parâmetros de deploy (gitignored)
 │   └── functions/
 │       ├── generate_question/
 │       ├── evaluate_answer/
@@ -186,7 +238,7 @@ quizzapp/
 │       ├── cancel_subscription/
 │       ├── customer_portal/
 │       └── stripe_webhook/
-├── screenshots/               # Prints das telas (gitignored)
+├── screenshots/                 # Prints das telas (gitignored)
 └── public/
 ```
 
@@ -275,7 +327,6 @@ sam deploy
 ## Planos futuros
 
 - Mais certificações AWS (ANS-C01, SCS-C02, MLS-C01)
-- Modo simulado completo (65 questões, tempo)
-- Análise de evolução por domínio com gráficos
-- Flashcards de revisão gerados por IA
+- Login social Google funcional via Cognito Hosted UI
+- Análise de evolução por domínio com gráficos avançados
 - App mobile (React Native)
