@@ -64,6 +64,8 @@ interface HeroSectionProps extends React.HTMLAttributes<HTMLDivElement> {
   ctaHref?: string
   secondaryCtaText?: string
   onSecondaryCtaClick?: () => void
+  /** Conteúdo exibido à direita em telas lg+ (ativa layout 2 colunas) */
+  rightContent?: React.ReactNode
   bottomImage?: {
     light: string
     dark: string
@@ -85,12 +87,15 @@ const HeroSection = React.forwardRef<HTMLDivElement, HeroSectionProps>(
       ctaHref = '/login',
       secondaryCtaText,
       onSecondaryCtaClick,
+      rightContent,
       bottomImage,
       gridOptions,
       ...props
     },
     ref,
   ) => {
+    const hasTwoCols = Boolean(rightContent)
+
     return (
       <div className={cn('relative', className)} ref={ref} {...props}>
         {/* Brilho radial de fundo com a cor primária do projeto */}
@@ -99,58 +104,86 @@ const HeroSection = React.forwardRef<HTMLDivElement, HeroSectionProps>(
         <section className="relative mx-auto z-[1]">
           <RetroGrid {...gridOptions} />
 
-          <div className="max-w-5xl z-10 mx-auto px-4 py-28 md:py-36 md:px-8">
-            <div className="space-y-6 max-w-3xl mx-auto text-center">
+          <div className="max-w-5xl z-10 mx-auto px-4 py-20 md:py-28 md:px-8">
 
-              {/* Badge */}
-              <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-2 text-sm font-semibold text-primary group cursor-default">
-                {title}
-                <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-200" />
-              </div>
+            {/* Layout: 2 colunas quando rightContent fornecido, 1 coluna centralizada sem */}
+            <div className={cn(
+              hasTwoCols
+                ? 'grid gap-12 lg:grid-cols-2 lg:items-center'
+                : 'flex flex-col items-center text-center',
+            )}>
 
-              {/* Título com gradiente */}
-              <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight font-sans bg-clip-text text-transparent bg-[linear-gradient(180deg,_hsl(var(--foreground))_0%,_hsl(var(--foreground)/0.7)_100%)] dark:bg-[linear-gradient(180deg,_#FFF_0%,_rgba(255,255,255,0.65)_100%)]">
-                {subtitle.regular}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary-400 dark:from-primary-300 dark:to-blue-300">
-                  {subtitle.gradient}
-                </span>
-              </h1>
+              {/* ── Coluna de texto ── */}
+              <div className={cn('space-y-6', !hasTwoCols && 'max-w-3xl')}>
 
-              {/* Descrição */}
-              <p className="max-w-xl mx-auto text-base md:text-lg text-muted-foreground leading-relaxed">
-                {description}
-              </p>
+                {/* Badge */}
+                <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-2 text-sm font-semibold text-primary group cursor-default">
+                  {title}
+                  <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-200" />
+                </div>
 
-              {/* CTAs */}
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-                {/* CTA principal — borda animada giratória */}
-                <span className="relative inline-block overflow-hidden rounded-full p-[1.5px]">
-                  <span className="absolute inset-[-1000%] animate-[spin_2.5s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#DDDEFF_0%,#3B39E8_50%,#DDDEFF_100%)]" />
-                  <div className="inline-flex h-full w-full items-center justify-center rounded-full bg-background text-xs font-medium backdrop-blur-3xl">
-                    <Link
-                      to={ctaHref ?? '/login'}
-                      className="inline-flex rounded-full items-center justify-center gap-2 bg-gradient-to-tr from-primary/15 via-primary/10 to-transparent border border-primary/20 hover:from-primary/25 hover:via-primary/15 text-foreground font-bold text-sm transition-all py-3.5 px-8"
+                {/* Título com gradiente */}
+                <h1 className={cn(
+                  'font-extrabold tracking-tight font-sans bg-clip-text text-transparent',
+                  'bg-[linear-gradient(180deg,_hsl(var(--foreground))_0%,_hsl(var(--foreground)/0.7)_100%)]',
+                  'dark:bg-[linear-gradient(180deg,_#FFF_0%,_rgba(255,255,255,0.65)_100%)]',
+                  hasTwoCols ? 'text-4xl md:text-5xl leading-tight' : 'text-4xl md:text-6xl',
+                )}>
+                  {subtitle.regular}
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary-400 dark:from-primary-300 dark:to-blue-300">
+                    {subtitle.gradient}
+                  </span>
+                </h1>
+
+                {/* Descrição */}
+                <p className={cn(
+                  'text-base md:text-lg text-muted-foreground leading-relaxed',
+                  !hasTwoCols && 'max-w-xl mx-auto',
+                )}>
+                  {description}
+                </p>
+
+                {/* CTAs */}
+                <div className={cn(
+                  'flex flex-col sm:flex-row gap-3',
+                  !hasTwoCols && 'items-center justify-center',
+                )}>
+                  {/* CTA principal — borda animada giratória */}
+                  <span className="relative inline-block overflow-hidden rounded-full p-[1.5px]">
+                    <span className="absolute inset-[-1000%] animate-[spin_2.5s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#DDDEFF_0%,#3B39E8_50%,#DDDEFF_100%)]" />
+                    <div className="inline-flex h-full w-full items-center justify-center rounded-full bg-background backdrop-blur-3xl">
+                      <Link
+                        to={ctaHref ?? '/login'}
+                        className="inline-flex rounded-full items-center justify-center gap-2 bg-gradient-to-tr from-primary/15 via-primary/10 to-transparent border border-primary/20 hover:from-primary/25 hover:via-primary/15 text-foreground font-bold text-sm transition-all py-3.5 px-8"
+                      >
+                        {ctaText}
+                        <ChevronRight className="h-4 w-4" />
+                      </Link>
+                    </div>
+                  </span>
+
+                  {/* CTA secundário (opcional) */}
+                  {secondaryCtaText && (
+                    <button
+                      onClick={onSecondaryCtaClick}
+                      className="rounded-full border border-border px-8 py-3.5 text-sm font-semibold text-muted-foreground hover:border-primary/40 hover:text-primary transition-colors"
                     >
-                      {ctaText}
-                      <ChevronRight className="h-4 w-4" />
-                    </Link>
-                  </div>
-                </span>
-
-                {/* CTA secundário (opcional) */}
-                {secondaryCtaText && (
-                  <button
-                    onClick={onSecondaryCtaClick}
-                    className="rounded-full border border-border px-8 py-3.5 text-sm font-semibold text-muted-foreground hover:border-primary/40 hover:text-primary transition-colors"
-                  >
-                    {secondaryCtaText}
-                  </button>
-                )}
+                      {secondaryCtaText}
+                    </button>
+                  )}
+                </div>
               </div>
+
+              {/* ── Conteúdo direito (quiz mockup, imagem, etc.) ── */}
+              {hasTwoCols && (
+                <div className="relative">
+                  {rightContent}
+                </div>
+              )}
             </div>
 
-            {/* Imagem inferior (opcional) */}
-            {bottomImage && (
+            {/* Imagem inferior (opcional, só no modo centralizado) */}
+            {bottomImage && !hasTwoCols && (
               <div className="mt-24 mx-4 md:mx-10 relative z-10">
                 <img
                   src={bottomImage.light}
