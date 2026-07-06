@@ -1,7 +1,6 @@
-import { useState, useEffect, useCallback } from 'react'
+﻿import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ChevronRight, RotateCcw } from 'lucide-react'
-import { ThemeToggle } from '../components/ThemeToggle'
 import { ProgressBar } from '../components/ProgressBar'
 import { useQuizStore } from '../store/quizStore'
 import { generateQuestion, evaluateAnswer } from '../services/api'
@@ -114,7 +113,6 @@ export function Quiz() {
             <span className="rounded-full border border-border px-2.5 py-1 text-xs font-semibold" style={{ color: cert.color }}>{cert.code}</span>
             <span className="text-xs text-muted-foreground">{subject}</span>
           </div>
-          <ThemeToggle />
         </div>
       </header>
 

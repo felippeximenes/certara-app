@@ -1,7 +1,6 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Check, AlertCircle, RefreshCw, Crown, ArrowRight } from 'lucide-react'
-import { ThemeToggle } from '../components/ThemeToggle'
 import { Logo } from '../components/Logo'
 import { generateSummary, listHistory, getSubscription } from '../services/api'
 import { cn } from '@/lib/utils'
@@ -65,7 +64,6 @@ export function StudyPlan() {
             <ArrowLeft className="h-3.5 w-3.5" /> Início
           </button>
           <Logo size="sm" />
-          <ThemeToggle />
         </div>
       </header>
 

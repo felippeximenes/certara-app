@@ -1,8 +1,7 @@
-import { useEffect, useRef, useState } from 'react'
+﻿import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import html2canvas from 'html2canvas'
 import { RotateCcw, History, Image, ClipboardCopy, MessageCircle, ExternalLink } from 'lucide-react'
-import { ThemeToggle } from '../components/ThemeToggle'
 import { SubjectBadge } from '../components/SubjectBadge'
 import { useQuizStore } from '../store/quizStore'
 import { generateSummary, saveQuiz } from '../services/api'
@@ -86,7 +85,6 @@ export function Result() {
       <header className="sticky top-0 z-10 border-b border-border bg-card/80 backdrop-blur-sm">
         <div className="mx-auto flex max-w-2xl items-center justify-between px-4 py-3">
           <SubjectBadge subject={subject} />
-          <ThemeToggle />
         </div>
       </header>
 

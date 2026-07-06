@@ -1,7 +1,6 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, Zap, Crown, Check, X, RefreshCw } from 'lucide-react'
-import { ThemeToggle } from '../components/ThemeToggle'
 import { getSubscription, createCheckoutSession, cancelSubscription, createPortalSession } from '../services/api'
 import { trackEvent } from '../services/analytics'
 import { cn } from '@/lib/utils'
@@ -139,7 +138,6 @@ export function Subscription() {
             <ArrowLeft className="h-3.5 w-3.5" />
             Início
           </button>
-          <ThemeToggle />
         </div>
       </header>
 

@@ -1,9 +1,8 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { CheckCircle } from 'lucide-react'
 import { getSubscription } from '../services/api'
 import { Logo } from '../components/Logo'
-import { ThemeToggle } from '../components/ThemeToggle'
 
 const FEATURES = [
   'Quizzes ilimitados todos os dias',
@@ -63,7 +62,6 @@ export function PaymentSuccess() {
 
       <header className="flex items-center justify-between border-b border-border px-6 py-4">
         <Logo />
-        <ThemeToggle />
       </header>
 
       <main className="mx-auto flex w-full max-w-md flex-1 flex-col items-center justify-center gap-8 px-6 py-12 text-center">

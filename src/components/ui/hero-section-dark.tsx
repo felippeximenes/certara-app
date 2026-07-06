@@ -104,7 +104,7 @@ const HeroSection = React.forwardRef<HTMLDivElement, HeroSectionProps>(
         <section className="relative mx-auto z-[1]">
           <RetroGrid {...gridOptions} />
 
-          <div className="max-w-5xl z-10 mx-auto px-4 py-20 md:py-28 md:px-8">
+          <div className="max-w-7xl z-10 mx-auto px-6 py-24 md:py-36 md:px-12">
 
             {/* Layout: 2 colunas quando rightContent fornecido, 1 coluna centralizada sem */}
             <div className={cn(

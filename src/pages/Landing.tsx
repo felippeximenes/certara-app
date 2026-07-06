@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import {
   BookOpen, Brain, TrendingUp,
@@ -9,7 +9,6 @@ import {
 const QUIZ_OPTIONS = ['Amazon S3', 'Amazon CloudFront', 'AWS Direct Connect', 'Amazon Route 53']
 import { motion } from 'motion/react'
 import { Logo } from '../components/Logo'
-import { ThemeToggle } from '../components/ThemeToggle'
 import { TestimonialsColumn } from '../components/ui/testimonials-columns-1'
 import { HeroSection } from '../components/ui/hero-section-dark'
 import { cn } from '@/lib/utils'
@@ -132,7 +131,6 @@ export function Landing() {
 
           {/* Desktop nav */}
           <nav className="hidden items-center gap-3 md:flex">
-            <ThemeToggle />
             <button
               onClick={() => navigate('/login')}
               className="rounded-[10px] border border-border px-4 py-2 text-sm font-semibold text-foreground hover:border-primary/40 hover:text-primary transition-colors"

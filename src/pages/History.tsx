@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import {
@@ -6,7 +6,6 @@ import {
   ResponsiveContainer, ReferenceLine,
   BarChart, Bar, Cell, LabelList,
 } from 'recharts'
-import { ThemeToggle } from '../components/ThemeToggle'
 import { listHistory } from '../services/api'
 import { cn } from '@/lib/utils'
 import type { QuizHistoryItem } from '../types/quiz'
@@ -149,7 +148,6 @@ export function History() {
             <ArrowLeft className="h-3.5 w-3.5" />
             Início
           </button>
-          <ThemeToggle />
         </div>
       </header>
 

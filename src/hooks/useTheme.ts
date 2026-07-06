@@ -1,21 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 
 export function useTheme() {
-  const [isDark, setIsDark] = useState(
-    () => localStorage.getItem('tema') === 'escuro'
-  )
-
   useEffect(() => {
-    document.documentElement.classList.toggle('dark', isDark)
-  }, [isDark])
+    document.documentElement.classList.remove('dark')
+    localStorage.removeItem('tema')
+  }, [])
 
-  const toggle = () => {
-    setIsDark((prev) => {
-      const next = !prev
-      localStorage.setItem('tema', next ? 'escuro' : 'claro')
-      return next
-    })
-  }
-
-  return { isDark, toggle }
+  return { isDark: false, toggle: () => {} }
 }

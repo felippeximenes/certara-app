@@ -1,11 +1,10 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   LogOut, Zap, Star, Trophy, Crown, Flame, Target, Layers, BookOpen,
   LayoutDashboard, BarChart3, Sparkles, Play, Menu, Check, Brain,
   TrendingUp, ChevronRight,
 } from 'lucide-react'
-import { ThemeToggle } from '../components/ThemeToggle'
 import { Logo } from '../components/Logo'
 import { Onboarding } from '../components/Onboarding'
 import { NotificationBell, seedNotifications } from '../components/NotificationBell'
@@ -371,7 +370,6 @@ export function Home() {
           )}
 
           <NotificationBell />
-          <ThemeToggle />
         </header>
 
         {/* Content */}

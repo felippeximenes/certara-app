@@ -1,9 +1,8 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Check, AlertCircle, Loader2, Eye, EyeOff } from 'lucide-react'
 import { register, confirmEmail, login, resendCode } from '../services/auth'
 import { useAuthStore } from '../store/authStore'
-import { ThemeToggle } from '../components/ThemeToggle'
 import { Logo } from '../components/Logo'
 import { trackEvent } from '../services/analytics'
 import { cn } from '@/lib/utils'
@@ -148,7 +147,6 @@ export function Login() {
       {/* ── Right panel — form ────────────────────────────────────── */}
       <div className="relative flex w-full flex-col items-center justify-center bg-background px-6 py-10 lg:w-1/2">
         <div className="absolute top-4 right-4">
-          <ThemeToggle />
         </div>
 
         {/* Mobile logo */}

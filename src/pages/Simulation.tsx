@@ -1,7 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
+﻿import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, Crown, Timer, CheckCircle, XCircle, RotateCcw } from 'lucide-react'
-import { ThemeToggle } from '../components/ThemeToggle'
 import { Logo } from '../components/Logo'
 import { ProgressBar } from '../components/ProgressBar'
 import { CERTIFICATIONS, getCertification } from '../data/certifications'
@@ -46,7 +45,6 @@ function SimConfig() {
             <ArrowLeft className="h-3.5 w-3.5" /> Início
           </button>
           <Logo size="sm" />
-          <ThemeToggle />
         </div>
       </header>
 
@@ -180,7 +178,6 @@ function SimRunning() {
             <Timer className="h-4 w-4" />
             {formatTime(timeRemaining)}
           </div>
-          <ThemeToggle />
         </div>
         <div className="px-4 pb-2">
           <ProgressBar current={answered} total={SIM_TOTAL} />
@@ -394,7 +391,6 @@ function SimResults() {
         <div className="mx-auto flex max-w-2xl items-center justify-between px-4 py-3">
           <Logo size="sm" />
           <span className="rounded-full border border-border px-2.5 py-1 text-xs font-bold" style={{ color: cert.color }}>{cert.code}</span>
-          <ThemeToggle />
         </div>
       </header>
 
