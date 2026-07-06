@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import {
   BookOpen, Brain, TrendingUp,
@@ -7,7 +7,7 @@ import {
 } from 'lucide-react'
 
 const QUIZ_OPTIONS = ['Amazon S3', 'Amazon CloudFront', 'AWS Direct Connect', 'Amazon Route 53']
-import { motion } from 'motion/react'
+import { motion, useReducedMotion } from 'motion/react'
 import { Logo } from '../components/Logo'
 import { TestimonialsColumn } from '../components/ui/testimonials-columns-1'
 import { HeroSection } from '../components/ui/hero-section-dark'
@@ -76,41 +76,85 @@ const secondColumn = TESTIMONIALS.slice(3, 6)
 const thirdColumn  = TESTIMONIALS.slice(6, 9)
 
 const FEATURES = [
-  { icon: Zap, title: 'Questões com IA', desc: 'Geradas dinamicamente pelo Amazon Bedrock, nunca repetidas.' },
+  { icon: Zap,         title: 'Questões com IA',      desc: 'Geradas dinamicamente pelo Amazon Bedrock, nunca repetidas.' },
   { icon: MessageSquare, title: 'Feedback instantâneo', desc: 'Explicação detalhada em cada resposta com tópicos de estudo.' },
-  { icon: Clock, title: 'Modo Simulado', desc: 'Simule a prova real com timer e 65 questões cronometradas.' },
-  { icon: BarChart2, title: 'Histórico completo', desc: 'Veja sua evolução, pontos fortes e fraquezas ao longo do tempo.' },
-  { icon: Brain, title: 'Plano de estudos', desc: 'Personalizado com base nos seus erros e desempenho por domínio.' },
-  { icon: Globe, title: 'Multi-certificações', desc: 'AWS CLF-C02, SAA-C03, DVA-C02. Mais em breve.' },
+  { icon: Clock,       title: 'Modo Simulado',         desc: 'Simule a prova real com timer e 65 questões cronometradas.' },
+  { icon: BarChart2,   title: 'Histórico completo',    desc: 'Veja sua evolução, pontos fortes e fraquezas ao longo do tempo.' },
+  { icon: Brain,       title: 'Plano de estudos',      desc: 'Personalizado com base nos seus erros e desempenho por domínio.' },
+  { icon: Globe,       title: 'Multi-certificações',   desc: 'AWS CLF-C02, SAA-C03, DVA-C02. Mais em breve.' },
 ]
 
 const STEPS = [
-  { icon: BookOpen, num: '01', title: 'Escolha sua certificação', desc: 'Selecione entre CLF-C02, SAA-C03 ou DVA-C02 e defina a dificuldade desejada.' },
-  { icon: Brain, num: '02', title: 'Pratique com IA', desc: 'Responda questões geradas em tempo real com feedback instantâneo após cada resposta.' },
-  { icon: TrendingUp, num: '03', title: 'Acompanhe sua evolução', desc: 'Analise gráficos de desempenho e receba um plano de estudos personalizado.' },
+  { icon: BookOpen,    num: '01', title: 'Escolha sua certificação', desc: 'Selecione entre CLF-C02, SAA-C03 ou DVA-C02 e defina a dificuldade desejada.' },
+  { icon: Brain,       num: '02', title: 'Pratique com IA',           desc: 'Responda questões geradas em tempo real com feedback instantâneo após cada resposta.' },
+  { icon: TrendingUp,  num: '03', title: 'Acompanhe sua evolução',    desc: 'Analise gráficos de desempenho e receba um plano de estudos personalizado.' },
 ]
 
 const FREE_FEATURES = [
-  { label: '5 quizzes por dia', ok: true },
-  { label: 'Feedback básico', ok: true },
-  { label: 'Modo simulado', ok: false },
-  { label: 'Histórico completo', ok: false },
-  { label: 'Plano de estudos', ok: false },
+  { label: '5 quizzes por dia',   ok: true  },
+  { label: 'Feedback básico',     ok: true  },
+  { label: 'Modo simulado',       ok: false },
+  { label: 'Histórico completo',  ok: false },
+  { label: 'Plano de estudos',    ok: false },
 ]
 
 const PREMIUM_FEATURES = [
-  { label: 'Quizzes ilimitados', ok: true },
-  { label: 'Feedback completo com IA', ok: true },
-  { label: 'Modo simulado', ok: true },
-  { label: 'Histórico completo', ok: true },
-  { label: 'Plano de estudos personalizado', ok: true },
+  { label: 'Quizzes ilimitados',            ok: true },
+  { label: 'Feedback completo com IA',      ok: true },
+  { label: 'Modo simulado',                 ok: true },
+  { label: 'Histórico completo',            ok: true },
+  { label: 'Plano de estudos personalizado',ok: true },
 ]
 
+// ── Animation helpers (transform + opacity only, ease-out, prefers-reduced-motion) ──
+const EASE = [0.16, 1, 0.3, 1] as const
+const VP   = { once: true, margin: '-80px' } as const
+
+function fadeUp(delay = 0, reduced = false) {
+  if (reduced) return {}
+  return {
+    initial:     { opacity: 0, y: 28 },
+    whileInView: { opacity: 1, y: 0 },
+    transition:  { duration: 0.5, ease: EASE, delay },
+    viewport:    VP,
+  }
+}
+
+function slideLeft(delay = 0, reduced = false) {
+  if (reduced) return {}
+  return {
+    initial:     { opacity: 0, x: -36 },
+    whileInView: { opacity: 1, x: 0 },
+    transition:  { duration: 0.5, ease: EASE, delay },
+    viewport:    VP,
+  }
+}
+
+function slideRight(delay = 0, reduced = false) {
+  if (reduced) return {}
+  return {
+    initial:     { opacity: 0, x: 36 },
+    whileInView: { opacity: 1, x: 0 },
+    transition:  { duration: 0.5, ease: EASE, delay },
+    viewport:    VP,
+  }
+}
+
+function scaleIn(delay = 0, reduced = false) {
+  if (reduced) return {}
+  return {
+    initial:     { opacity: 0, scale: 0.92 },
+    whileInView: { opacity: 1, scale: 1 },
+    transition:  { duration: 0.45, ease: EASE, delay },
+    viewport:    VP,
+  }
+}
 
 export function Landing() {
   const navigate = useNavigate()
-  const [scrolled, setScrolled] = useState(false)
+  const [scrolled, setScrolled]           = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const shouldReduce = useReducedMotion() ?? false
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20)
@@ -129,7 +173,6 @@ export function Landing() {
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
           <Logo size="md" />
 
-          {/* Desktop nav */}
           <nav className="hidden items-center gap-3 md:flex">
             <button
               onClick={() => navigate('/login')}
@@ -145,13 +188,11 @@ export function Landing() {
             </button>
           </nav>
 
-          {/* Mobile menu button */}
           <button className="md:hidden" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
             <Menu className="h-5 w-5 text-muted-foreground" />
           </button>
         </div>
 
-        {/* Mobile menu */}
         {mobileMenuOpen && (
           <div className="border-t border-border bg-background px-4 py-4 space-y-2 md:hidden">
             <button onClick={() => navigate('/login')}
@@ -181,7 +222,6 @@ export function Landing() {
         gridOptions={{ angle: 65, opacity: 0.4, cellSize: 55 }}
         rightContent={
           <div className="relative">
-            {/* Brilho de fundo atrás do card */}
             <div className="absolute -inset-4 rounded-3xl bg-primary/5 blur-2xl" />
             <div className="relative rounded-2xl border border-border bg-card p-5 shadow-xl">
               <div className="mb-3 flex items-center justify-between">
@@ -226,33 +266,37 @@ export function Landing() {
         }
       />
 
-      {/* ── Social proof ────────────────────────────────────────── */}
+      {/* ── Social proof — fade-up staggered por stat ───────────── */}
       <section className="bg-primary py-12">
         <div className="mx-auto max-w-5xl px-4">
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
             {[
               { num: '10.000+', label: 'questões praticadas' },
-              { num: '3', label: 'certificações AWS' },
-              { num: '98%', label: 'de aprovação' },
-            ].map(({ num, label }) => (
-              <div key={label} className="text-center">
+              { num: '3',       label: 'certificações AWS'   },
+              { num: '98%',     label: 'de aprovação'        },
+            ].map(({ num, label }, i) => (
+              <motion.div key={label} className="text-center" {...fadeUp(i * 0.1, shouldReduce)}>
                 <p className="font-sans text-4xl font-extrabold text-white">{num}</p>
                 <p className="mt-1 text-sm font-medium text-white/70">{label}</p>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── Como funciona ───────────────────────────────────────── */}
+      {/* ── Como funciona — cards deslizam da esquerda ──────────── */}
       <section id="como-funciona" className="mx-auto max-w-5xl px-4 py-16 md:py-24">
-        <div className="mb-12 text-center">
+        <motion.div className="mb-12 text-center" {...fadeUp(0, shouldReduce)}>
           <h2 className="font-sans text-3xl font-extrabold text-foreground">Simples assim</h2>
           <p className="mt-2 text-muted-foreground">Do zero à aprovação em 3 passos</p>
-        </div>
+        </motion.div>
         <div className="grid gap-6 md:grid-cols-3">
-          {STEPS.map(({ icon: Icon, num, title, desc }) => (
-            <div key={title} className="rounded-2xl border border-border bg-card p-6 space-y-4">
+          {STEPS.map(({ icon: Icon, num, title, desc }, i) => (
+            <motion.div
+              key={title}
+              className="rounded-2xl border border-border bg-card p-6 space-y-4"
+              {...slideLeft(i * 0.12, shouldReduce)}
+            >
               <div className="flex items-center gap-3">
                 <span className="font-sans text-3xl font-extrabold text-primary/20">{num}</span>
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
@@ -263,23 +307,24 @@ export function Landing() {
                 <h3 className="font-sans text-base font-bold text-foreground">{title}</h3>
                 <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{desc}</p>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
       </section>
 
-      {/* ── Funcionalidades ─────────────────────────────────────── */}
+      {/* ── Funcionalidades — scale-in staggered grid ───────────── */}
       <section className="bg-card py-16 md:py-24">
         <div className="mx-auto max-w-5xl px-4">
-          <div className="mb-12 text-center">
+          <motion.div className="mb-12 text-center" {...fadeUp(0, shouldReduce)}>
             <h2 className="font-sans text-3xl font-extrabold text-foreground">Tudo que você precisa para passar</h2>
             <p className="mt-2 text-muted-foreground">Ferramentas pensadas para quem estuda de verdade</p>
-          </div>
+          </motion.div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {FEATURES.map(({ icon: Icon, title, desc }) => (
-              <div
+            {FEATURES.map(({ icon: Icon, title, desc }, i) => (
+              <motion.div
                 key={title}
                 className="group rounded-2xl border border-border bg-background p-5 space-y-3 hover:border-primary/40 hover:shadow-md transition-all duration-200"
+                {...scaleIn(i * 0.07, shouldReduce)}
               >
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 group-hover:bg-primary/20 transition-colors">
                   <Icon className="h-5 w-5 text-primary" />
@@ -288,7 +333,7 @@ export function Landing() {
                   <h3 className="font-sans text-sm font-bold text-foreground">{title}</h3>
                   <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{desc}</p>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
@@ -297,8 +342,6 @@ export function Landing() {
       {/* ── Depoimentos ─────────────────────────────────────────── */}
       <section className="py-16 md:py-24 bg-background relative overflow-hidden">
         <div className="mx-auto max-w-5xl px-4">
-
-          {/* Cabeçalho animado */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -317,25 +360,27 @@ export function Landing() {
             </p>
           </motion.div>
 
-          {/* Colunas com scroll automático */}
           <div className="flex justify-center gap-5 [mask-image:linear-gradient(to_bottom,transparent,black_20%,black_80%,transparent)] max-h-[640px] overflow-hidden">
-            <TestimonialsColumn testimonials={firstColumn} duration={18} />
+            <TestimonialsColumn testimonials={firstColumn}  duration={18} />
             <TestimonialsColumn testimonials={secondColumn} className="hidden md:block" duration={22} />
             <TestimonialsColumn testimonials={thirdColumn}  className="hidden lg:block" duration={20} />
           </div>
         </div>
       </section>
 
-      {/* ── Planos ──────────────────────────────────────────────── */}
+      {/* ── Planos — Free da esquerda, Premium da direita ───────── */}
       <section className="mx-auto max-w-5xl px-4 py-16 md:py-24">
-        <div className="mb-12 text-center">
+        <motion.div className="mb-12 text-center" {...fadeUp(0, shouldReduce)}>
           <h2 className="font-sans text-3xl font-extrabold text-foreground">Invista no seu futuro</h2>
           <p className="mt-2 text-muted-foreground">Comece grátis, evolua quando quiser</p>
-        </div>
+        </motion.div>
         <div className="grid gap-6 md:grid-cols-2 md:max-w-2xl md:mx-auto">
 
-          {/* Free */}
-          <div className="rounded-2xl border border-border bg-card p-6 space-y-6">
+          {/* Free — slide da esquerda */}
+          <motion.div
+            className="rounded-2xl border border-border bg-card p-6 space-y-6"
+            {...slideLeft(0, shouldReduce)}
+          >
             <div>
               <p className="font-sans text-sm font-semibold text-muted-foreground uppercase tracking-wide">Gratuito</p>
               <p className="font-sans text-4xl font-extrabold text-foreground mt-1">R$ 0</p>
@@ -345,7 +390,7 @@ export function Landing() {
                 <li key={label} className="flex items-center gap-2.5 text-sm">
                   {ok
                     ? <Check className="h-4 w-4 flex-shrink-0 text-success" />
-                    : <X className="h-4 w-4 flex-shrink-0 text-muted-foreground/40" />}
+                    : <X     className="h-4 w-4 flex-shrink-0 text-muted-foreground/40" />}
                   <span className={ok ? 'text-foreground' : 'text-muted-foreground/60 line-through'}>{label}</span>
                 </li>
               ))}
@@ -356,10 +401,13 @@ export function Landing() {
             >
               Começar grátis
             </button>
-          </div>
+          </motion.div>
 
-          {/* Premium */}
-          <div className="relative rounded-2xl border-2 border-primary bg-primary/5 p-6 space-y-6">
+          {/* Premium — slide da direita */}
+          <motion.div
+            className="relative rounded-2xl border-2 border-primary bg-primary/5 p-6 space-y-6"
+            {...slideRight(0.08, shouldReduce)}
+          >
             <div className="absolute -top-3 left-1/2 -translate-x-1/2">
               <span className="rounded-full bg-primary px-3 py-1 text-xs font-bold text-white">Mais popular</span>
             </div>
@@ -384,13 +432,16 @@ export function Landing() {
             >
               Assinar Premium
             </button>
-          </div>
+          </motion.div>
         </div>
       </section>
 
-      {/* ── CTA final ───────────────────────────────────────────── */}
+      {/* ── CTA final — scale + fade centralizado ───────────────── */}
       <section className="bg-primary py-16">
-        <div className="mx-auto max-w-2xl px-4 text-center space-y-6">
+        <motion.div
+          className="mx-auto max-w-2xl px-4 text-center space-y-6"
+          {...scaleIn(0, shouldReduce)}
+        >
           <h2 className="font-sans text-3xl font-extrabold text-white">Pronto para se certificar?</h2>
           <p className="text-base text-white/70">Comece grátis hoje. Sem cartão de crédito.</p>
           <button
@@ -399,7 +450,7 @@ export function Landing() {
           >
             Criar conta gratuita
           </button>
-        </div>
+        </motion.div>
       </section>
 
       {/* ── Footer ──────────────────────────────────────────────── */}
@@ -408,7 +459,7 @@ export function Landing() {
           <Logo size="sm" />
           <p className="text-xs text-muted-foreground">© 2025 Certara. Todos os direitos reservados.</p>
           <div className="flex gap-4 text-xs text-muted-foreground">
-            <Link to="/termos" className="hover:text-primary transition-colors">Termos de uso</Link>
+            <Link to="/termos"      className="hover:text-primary transition-colors">Termos de uso</Link>
             <Link to="/privacidade" className="hover:text-primary transition-colors">Política de privacidade</Link>
           </div>
         </div>
