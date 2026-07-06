@@ -101,10 +101,10 @@ const HeroSection = React.forwardRef<HTMLDivElement, HeroSectionProps>(
         {/* Brilho radial de fundo com a cor primária do projeto */}
         <div className="absolute top-0 z-0 h-screen w-screen bg-[radial-gradient(ellipse_60%_50%_at_50%_-20%,rgba(59,57,232,0.12),transparent)] dark:bg-[radial-gradient(ellipse_60%_50%_at_50%_-20%,rgba(59,57,232,0.25),transparent)]" />
 
-        <section className="relative mx-auto z-[1]">
+        <section className="relative mx-auto z-[1] min-h-dvh flex flex-col justify-center">
           <RetroGrid {...gridOptions} />
 
-          <div className="max-w-7xl z-10 mx-auto px-6 py-32 md:py-48 md:px-12">
+          <div className="max-w-7xl z-10 mx-auto px-6 pt-[96px] pb-16 md:pt-[100px] md:pb-20 md:px-12 w-full">
 
             {/* Layout: 2 colunas quando rightContent fornecido, 1 coluna centralizada sem */}
             <div className={cn(

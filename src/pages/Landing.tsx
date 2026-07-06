@@ -166,45 +166,54 @@ export function Landing() {
     <div className="min-h-svh bg-background text-foreground">
 
       {/* ── Navbar ──────────────────────────────────────────────── */}
-      <header className={cn(
-        'sticky top-0 z-50 transition-all duration-300',
-        scrolled ? 'border-b border-border bg-background/90 backdrop-blur-sm shadow-sm' : 'bg-transparent',
-      )}>
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
-          <Logo size="md" />
+      <header className="fixed top-0 left-0 right-0 z-50 pointer-events-none">
+        <div className="mx-auto max-w-5xl px-4 pt-4 pointer-events-auto">
+          <div className={cn(
+            'flex items-center justify-between rounded-2xl border px-5 py-[13px]',
+            'backdrop-blur-[18px] transition-all duration-300',
+            scrolled
+              ? 'bg-white/92 border-[#E2E8FF]/80 shadow-[0_8px_32px_-6px_rgba(59,57,232,0.14)]'
+              : 'bg-white/70 border-white/50 shadow-[0_4px_20px_-4px_rgba(59,57,232,0.06)]',
+          )}>
+            <Logo size="md" />
 
-          <nav className="hidden items-center gap-3 md:flex">
+            <nav className="hidden items-center gap-3 md:flex">
+              <button
+                onClick={() => navigate('/login')}
+                className="rounded-[10px] border border-[#E4E1F2] px-4 py-2 text-sm font-semibold text-[#1A1626] hover:border-primary/40 hover:text-primary transition-colors"
+              >
+                Entrar
+              </button>
+              <button
+                onClick={() => navigate('/login')}
+                className="rounded-[11px] bg-primary px-4 py-[9px] text-sm font-bold text-white hover:bg-primary-hover transition-all shadow-[0_4px_14px_-4px_rgba(59,57,232,0.55)]"
+              >
+                Começar grátis
+              </button>
+            </nav>
+
             <button
-              onClick={() => navigate('/login')}
-              className="rounded-[10px] border border-border px-4 py-2 text-sm font-semibold text-foreground hover:border-primary/40 hover:text-primary transition-colors"
+              className="md:hidden"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-label="Abrir menu"
             >
-              Entrar
-            </button>
-            <button
-              onClick={() => navigate('/login')}
-              className="rounded-[10px] bg-primary px-4 py-2 text-sm font-bold text-white hover:bg-primary-hover transition-colors"
-            >
-              Começar grátis
-            </button>
-          </nav>
-
-          <button className="md:hidden" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-            <Menu className="h-5 w-5 text-muted-foreground" />
-          </button>
-        </div>
-
-        {mobileMenuOpen && (
-          <div className="border-t border-border bg-background px-4 py-4 space-y-2 md:hidden">
-            <button onClick={() => navigate('/login')}
-              className="w-full rounded-[10px] border border-border py-2.5 text-sm font-semibold text-foreground">
-              Entrar
-            </button>
-            <button onClick={() => navigate('/login')}
-              className="w-full rounded-[10px] bg-primary py-2.5 text-sm font-bold text-white">
-              Começar grátis
+              <Menu className="h-5 w-5 text-[#6B6780]" />
             </button>
           </div>
-        )}
+
+          {mobileMenuOpen && (
+            <div className="mt-2 rounded-2xl border border-[#E4E1F2]/70 bg-white/95 backdrop-blur-[18px] px-4 py-3 space-y-2 md:hidden shadow-[0_8px_32px_-8px_rgba(59,57,232,0.12)]">
+              <button onClick={() => navigate('/login')}
+                className="w-full rounded-[11px] border border-[#E4E1F2] py-2.5 text-sm font-semibold text-[#1A1626]">
+                Entrar
+              </button>
+              <button onClick={() => navigate('/login')}
+                className="w-full rounded-[11px] bg-primary py-2.5 text-sm font-bold text-white">
+                Começar grátis
+              </button>
+            </div>
+          )}
+        </div>
       </header>
 
       {/* ── Hero ────────────────────────────────────────────────── */}
