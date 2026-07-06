@@ -5,9 +5,73 @@ import {
   Zap, MessageSquare, Clock, BarChart2, Star, Globe,
   Check, X, Menu, ChevronRight,
 } from 'lucide-react'
+import { motion } from 'motion/react'
 import { Logo } from '../components/Logo'
 import { ThemeToggle } from '../components/ThemeToggle'
+import { TestimonialsColumn } from '../components/ui/testimonials-columns-1'
 import { cn } from '@/lib/utils'
+
+// ── Depoimentos de estudantes aprovados em certificações AWS ──────────────────
+const TESTIMONIALS = [
+  {
+    text: 'Passei no CLF-C02 na primeira tentativa após 3 semanas usando o Certara. O feedback instantâneo da IA fez toda a diferença na minha preparação.',
+    image: 'https://randomuser.me/api/portraits/women/1.jpg',
+    name: 'Gabriela Alves',
+    role: 'Analista de TI · Aprovada CLF-C02',
+  },
+  {
+    text: 'Nunca tinha estudado para certificação antes. O plano de estudos personalizado me guiou exatamente onde precisava focar. Resultado: aprovado!',
+    image: 'https://randomuser.me/api/portraits/men/2.jpg',
+    name: 'Rafael Mendes',
+    role: 'Desenvolvedor Backend · Aprovado CLF-C02',
+  },
+  {
+    text: 'O modo simulado é excelente. Fiz o SAA-C03 sentindo que já conhecia o formato da prova. Aprovado com 850 pontos!',
+    image: 'https://randomuser.me/api/portraits/women/3.jpg',
+    name: 'Carolina Santos',
+    role: 'Arquiteta de Soluções · Aprovada SAA-C03',
+  },
+  {
+    text: 'As questões geradas por IA são muito próximas das reais. O Certara foi fundamental para conquistar a certificação AWS em tempo recorde.',
+    image: 'https://randomuser.me/api/portraits/men/4.jpg',
+    name: 'Lucas Ferreira',
+    role: 'Engenheiro de Cloud · Aprovado SAA-C03',
+  },
+  {
+    text: 'Tentei outras plataformas antes, mas o Certara se destacou pelo feedback detalhado em cada questão. Entendi o porquê dos meus erros.',
+    image: 'https://randomuser.me/api/portraits/women/5.jpg',
+    name: 'Amanda Costa',
+    role: 'DevOps Engineer · Aprovada DVA-C02',
+  },
+  {
+    text: 'O histórico de desempenho me mostrou exatamente meus pontos fracos em Segurança e IAM. Focei nisso e passei no DVA-C02 com folga!',
+    image: 'https://randomuser.me/api/portraits/men/6.jpg',
+    name: 'Thiago Oliveira',
+    role: 'Developer · Aprovado DVA-C02',
+  },
+  {
+    text: 'Em apenas 5 semanas saí do zero e passei no Cloud Practitioner. A sequência de estudos gamificada me manteve motivado até o fim.',
+    image: 'https://randomuser.me/api/portraits/women/7.jpg',
+    name: 'Mariana Lima',
+    role: 'Product Manager · Aprovada CLF-C02',
+  },
+  {
+    text: 'O modo simulado com 65 questões cronometradas me preparou mentalmente para a pressão do exame real. Senti muita confiança no dia da prova.',
+    image: 'https://randomuser.me/api/portraits/men/8.jpg',
+    name: 'Pedro Souza',
+    role: 'SRE Engineer · Aprovado SAA-C03',
+  },
+  {
+    text: 'O Certara tornou o estudo de AWS dinâmico e eficiente. Os flashcards de revisão rápida me ajudaram muito nos dias anteriores ao exame.',
+    image: 'https://randomuser.me/api/portraits/women/9.jpg',
+    name: 'Juliana Nunes',
+    role: 'Analista de Cloud · Aprovada CLF-C02',
+  },
+]
+
+const firstColumn  = TESTIMONIALS.slice(0, 3)
+const secondColumn = TESTIMONIALS.slice(3, 6)
+const thirdColumn  = TESTIMONIALS.slice(6, 9)
 
 const FEATURES = [
   { icon: Zap, title: 'Questões com IA', desc: 'Geradas dinamicamente pelo Amazon Bedrock, nunca repetidas.' },
@@ -244,6 +308,38 @@ export function Landing() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Depoimentos ─────────────────────────────────────────── */}
+      <section className="py-16 md:py-24 bg-background relative overflow-hidden">
+        <div className="mx-auto max-w-5xl px-4">
+
+          {/* Cabeçalho animado */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+            viewport={{ once: true }}
+            className="flex flex-col items-center text-center mb-12"
+          >
+            <span className="inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary mb-4">
+              Depoimentos
+            </span>
+            <h2 className="font-sans text-3xl font-extrabold text-foreground">
+              Quem já se certificou com o Certara
+            </h2>
+            <p className="mt-3 text-muted-foreground max-w-md">
+              Veja o que dizem os estudantes que passaram nas certificações AWS usando nossa plataforma.
+            </p>
+          </motion.div>
+
+          {/* Colunas com scroll automático */}
+          <div className="flex justify-center gap-5 [mask-image:linear-gradient(to_bottom,transparent,black_20%,black_80%,transparent)] max-h-[640px] overflow-hidden">
+            <TestimonialsColumn testimonials={firstColumn} duration={18} />
+            <TestimonialsColumn testimonials={secondColumn} className="hidden md:block" duration={22} />
+            <TestimonialsColumn testimonials={thirdColumn}  className="hidden lg:block" duration={20} />
           </div>
         </div>
       </section>
