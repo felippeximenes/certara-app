@@ -113,9 +113,9 @@ const VP   = { once: true, margin: '-80px' } as const
 function fadeUp(delay = 0, reduced = false) {
   if (reduced) return {}
   return {
-    initial:     { opacity: 0, y: 28 },
+    initial:     { opacity: 0, y: 32 },
     whileInView: { opacity: 1, y: 0 },
-    transition:  { duration: 0.5, ease: EASE, delay },
+    transition:  { duration: 0.75, ease: EASE, delay },
     viewport:    VP,
   }
 }
@@ -123,9 +123,9 @@ function fadeUp(delay = 0, reduced = false) {
 function slideLeft(delay = 0, reduced = false) {
   if (reduced) return {}
   return {
-    initial:     { opacity: 0, x: -36 },
+    initial:     { opacity: 0, x: -40 },
     whileInView: { opacity: 1, x: 0 },
-    transition:  { duration: 0.5, ease: EASE, delay },
+    transition:  { duration: 0.7, ease: EASE, delay },
     viewport:    VP,
   }
 }
@@ -133,9 +133,9 @@ function slideLeft(delay = 0, reduced = false) {
 function slideRight(delay = 0, reduced = false) {
   if (reduced) return {}
   return {
-    initial:     { opacity: 0, x: 36 },
+    initial:     { opacity: 0, x: 40 },
     whileInView: { opacity: 1, x: 0 },
-    transition:  { duration: 0.5, ease: EASE, delay },
+    transition:  { duration: 0.7, ease: EASE, delay },
     viewport:    VP,
   }
 }
@@ -145,7 +145,7 @@ function scaleIn(delay = 0, reduced = false) {
   return {
     initial:     { opacity: 0, scale: 0.92 },
     whileInView: { opacity: 1, scale: 1 },
-    transition:  { duration: 0.45, ease: EASE, delay },
+    transition:  { duration: 0.65, ease: EASE, delay },
     viewport:    VP,
   }
 }
