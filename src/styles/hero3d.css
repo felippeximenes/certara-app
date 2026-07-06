@@ -1,0 +1,51 @@
+/* ── Hero background ────────────────────────────────────────────────────────── */
+.herobg .g1 { position:absolute; top:-160px; left:-120px; width:520px; height:520px; border-radius:50%;
+  background:radial-gradient(circle,rgba(59,57,232,.16),transparent 68%); }
+.herobg .g2 { position:absolute; top:40px; right:-120px; width:480px; height:480px; border-radius:50%;
+  background:radial-gradient(circle,rgba(13,148,136,.14),transparent 68%); }
+.herobg .dots { position:absolute; inset:0; opacity:.5;
+  background-image:radial-gradient(#E4E1F2 1.3px,transparent 1.3px); background-size:26px 26px;
+  -webkit-mask-image:radial-gradient(120% 80% at 70% 20%,#000 20%,transparent 70%);
+          mask-image:radial-gradient(120% 80% at 70% 20%,#000 20%,transparent 70%); }
+
+/* ── 3D scene (prefixed hscene/hstage to avoid conflict with login3d.css) ──── */
+.hscene { position:relative; perspective:1400px; perspective-origin:50% 40%; }
+.hstage { position:relative; transform-style:preserve-3d;
+          transform:rotateX(var(--rx,7deg)) rotateY(var(--ry,-11deg));
+          transition:transform .3s cubic-bezier(.2,.7,.3,1); }
+
+/* quiz card */
+.qcard { position:relative; z-index:3; transform:translateZ(50px);
+         box-shadow:0 40px 80px -30px rgba(45,43,197,.4), 0 8px 24px -12px rgba(26,22,38,.14); }
+
+/* ── Floating hexes (hfhex to avoid conflict with .fhex in login3d.css) ─────── */
+.hfhex        { position:absolute; transform-style:preserve-3d;
+                filter:drop-shadow(0 24px 34px rgba(59,57,232,.3)); }
+.hfhex svg    { display:block; width:100%; height:100%; }
+.hfhex .edge  { position:absolute; inset:0; transform:translateZ(-12px);
+                filter:brightness(.55) saturate(1.2); }
+.hfhex .lbl   { position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+                font-family:'Plus Jakarta Sans'; font-weight:800; color:#fff; font-size:16px;
+                transform:translateZ(2px); text-shadow:0 2px 6px rgba(0,0,0,.25); }
+
+.hfhex.h1 { width:96px;  height:104px; top:-46px;   right:20px;  z-index:4; transform:translateZ(90px); animation:fl1 8s  ease-in-out infinite; }
+.hfhex.h2 { width:70px;  height:76px;  bottom:-30px; left:-34px; z-index:4; transform:translateZ(70px); animation:fl2 10s ease-in-out infinite; }
+.hfhex.h3 { width:52px;  height:56px;  top:44%;     right:-30px; z-index:1; transform:translateZ(20px); animation:fl3 9s  ease-in-out infinite; }
+
+/* ── Orbs (horb/ho1/ho2 to avoid conflict with .orb in login3d.css) ────────── */
+.horb      { position:absolute; border-radius:50%; }
+.horb.ho1  { width:20px; height:20px; bottom:60px; right:-16px;
+             background:radial-gradient(circle at 30% 30%,#5EEAD4,#0D9488);
+             box-shadow:0 8px 18px rgba(13,148,136,.5);
+             transform:translateZ(120px); animation:fl3 7s ease-in-out infinite; }
+.horb.ho2  { width:14px; height:14px; top:20px; left:-22px;
+             background:radial-gradient(circle at 30% 30%,#fff,#BBBDFF);
+             box-shadow:0 8px 18px rgba(59,57,232,.5);
+             transform:translateZ(100px); animation:fl1 9s ease-in-out infinite; }
+
+/* fl1/fl2/fl3 are distinct from float1/float2/float3 in login3d.css */
+@keyframes fl1 { 0%,100%{margin-top:0}  50%{margin-top:-16px} }
+@keyframes fl2 { 0%,100%{margin-top:0}  50%{margin-top:-13px} }
+@keyframes fl3 { 0%,100%{margin-top:0}  50%{margin-top:-10px} }
+
+@media (prefers-reduced-motion:reduce) { .hfhex,.horb { animation:none; } }

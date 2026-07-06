@@ -6,11 +6,11 @@ import {
   Check, X, Menu,
 } from 'lucide-react'
 
-const QUIZ_OPTIONS = ['Amazon S3', 'Amazon CloudFront', 'AWS Direct Connect', 'Amazon Route 53']
 import { motion, useReducedMotion } from 'motion/react'
 import { Logo } from '../components/Logo'
 import { TestimonialsColumn } from '../components/ui/testimonials-columns-1'
 import { HeroSection } from '../components/ui/hero-section-dark'
+import { HeroScene } from '../components/HeroScene'
 import { cn } from '@/lib/utils'
 
 // ── Depoimentos de estudantes aprovados em certificações AWS ──────────────────
@@ -220,50 +220,7 @@ export function Landing() {
         secondaryCtaText="Ver como funciona"
         onSecondaryCtaClick={() => document.getElementById('como-funciona')?.scrollIntoView({ behavior: 'smooth' })}
         gridOptions={{ angle: 65, opacity: 0.4, cellSize: 55 }}
-        rightContent={
-          <div className="relative">
-            <div className="absolute -inset-4 rounded-3xl bg-primary/5 blur-2xl" />
-            <div className="relative rounded-2xl border border-border bg-card p-5 shadow-xl">
-              <div className="mb-3 flex items-center justify-between">
-                <span className="text-xs font-bold text-[#FF9900]">CLF-C02</span>
-                <span className="text-xs text-muted-foreground">Questão 1 de 10 · 10%</span>
-              </div>
-              <div className="mb-4 h-1.5 rounded-full bg-muted">
-                <div className="h-full w-[10%] rounded-full bg-primary transition-all duration-700" />
-              </div>
-              <p className="mb-4 text-sm font-medium leading-relaxed text-foreground">
-                Qual serviço AWS fornece uma CDN globalmente distribuída para servir conteúdo com baixa latência?
-              </p>
-              <div className="space-y-2">
-                {QUIZ_OPTIONS.map((opt, i) => (
-                  <div
-                    key={opt}
-                    className={cn(
-                      'flex items-center gap-3 rounded-lg border px-3 py-2 text-sm transition-colors duration-200',
-                      i === 1
-                        ? 'border-[#22C55E] bg-[#22C55E]/10 text-foreground'
-                        : 'border-border text-muted-foreground',
-                    )}
-                  >
-                    <span className={cn(
-                      'flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold',
-                      i === 1 ? 'bg-[#22C55E] text-white' : 'bg-muted text-muted-foreground',
-                    )}>
-                      {['A', 'B', 'C', 'D'][i]}
-                    </span>
-                    {opt}
-                  </div>
-                ))}
-              </div>
-              <div className="mt-3 rounded-lg border border-[#22C55E]/20 bg-[#22C55E]/10 p-3">
-                <p className="text-xs font-semibold text-[#22C55E]">✓ Correto!</p>
-                <p className="mt-0.5 text-xs text-foreground">
-                  CloudFront distribui conteúdo via edge locations com baixa latência.
-                </p>
-              </div>
-            </div>
-          </div>
-        }
+        rightContent={<HeroScene />}
       />
 
       {/* ── Social proof — fade-up staggered por stat ───────────── */}
