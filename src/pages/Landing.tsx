@@ -2,13 +2,14 @@ import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import {
   BookOpen, Brain, TrendingUp,
-  Zap, MessageSquare, Clock, BarChart2, Star, Globe,
-  Check, X, Menu, ChevronRight,
+  Zap, MessageSquare, Clock, BarChart2, Globe,
+  Check, X, Menu,
 } from 'lucide-react'
 import { motion } from 'motion/react'
 import { Logo } from '../components/Logo'
 import { ThemeToggle } from '../components/ThemeToggle'
 import { TestimonialsColumn } from '../components/ui/testimonials-columns-1'
+import { HeroSection } from '../components/ui/hero-section-dark'
 import { cn } from '@/lib/utils'
 
 // ── Depoimentos de estudantes aprovados em certificações AWS ──────────────────
@@ -104,7 +105,6 @@ const PREMIUM_FEATURES = [
   { label: 'Plano de estudos personalizado', ok: true },
 ]
 
-const QUIZ_OPTIONS = ['Amazon S3', 'Amazon CloudFront', 'AWS Direct Connect', 'Amazon Route 53']
 
 export function Landing() {
   const navigate = useNavigate()
@@ -167,82 +167,23 @@ export function Landing() {
       </header>
 
       {/* ── Hero ────────────────────────────────────────────────── */}
-      <section className="mx-auto max-w-5xl px-4 py-16 md:py-24">
-        <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
-          <div className="space-y-6">
-            {/* Badge */}
-            <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary">
-              <Star className="h-3 w-3" />
-              Powered by Amazon Bedrock AI
-            </div>
-
-            <h1 className="font-sans text-4xl font-extrabold leading-tight text-foreground md:text-5xl">
-              A forma mais inteligente de se preparar para{' '}
-              <span className="text-primary">certificações</span>
-            </h1>
-
-            <p className="text-base leading-relaxed text-muted-foreground md:text-lg">
-              Questões geradas por IA com feedback personalizado. Estude no seu ritmo e chegue
-              preparado para o exame.
-            </p>
-
-            <div className="flex flex-wrap gap-3">
-              <button
-                onClick={() => navigate('/login')}
-                className="flex items-center gap-2 rounded-[10px] bg-primary px-6 py-3 text-sm font-bold text-white hover:bg-primary-hover transition-colors"
-              >
-                Começar grátis <ChevronRight className="h-4 w-4" />
-              </button>
-              <button
-                onClick={() => document.getElementById('como-funciona')?.scrollIntoView({ behavior: 'smooth' })}
-                className="rounded-[10px] border border-border px-6 py-3 text-sm font-semibold text-foreground hover:border-primary/40 hover:text-primary transition-colors"
-              >
-                Ver como funciona
-              </button>
-            </div>
-          </div>
-
-          {/* Quiz mockup */}
-          <div className="relative">
-            <div className="absolute -inset-4 rounded-3xl bg-primary/5 blur-2xl" />
-            <div className="relative rounded-2xl border border-border bg-card p-5 shadow-xl">
-              <div className="mb-3 flex items-center justify-between">
-                <span className="text-xs font-bold text-[#FF9900]">CLF-C02</span>
-                <span className="text-xs text-muted-foreground">Questão 1 de 10 · 10%</span>
-              </div>
-              <div className="mb-4 h-1.5 rounded-full bg-muted">
-                <div className="h-full w-[10%] rounded-full bg-primary" />
-              </div>
-              <p className="mb-4 text-sm font-medium leading-relaxed text-foreground">
-                Qual serviço AWS fornece uma CDN globalmente distribuída para servir conteúdo com baixa latência?
-              </p>
-              <div className="space-y-2">
-                {QUIZ_OPTIONS.map((opt, i) => (
-                  <div
-                    key={opt}
-                    className={cn(
-                      'flex items-center gap-3 rounded-lg border px-3 py-2 text-sm',
-                      i === 1 ? 'border-[#22C55E] bg-[#22C55E]/10 text-foreground' : 'border-border text-muted-foreground',
-                    )}
-                  >
-                    <span className={cn(
-                      'flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold',
-                      i === 1 ? 'bg-[#22C55E] text-white' : 'bg-muted text-muted-foreground',
-                    )}>
-                      {['A', 'B', 'C', 'D'][i]}
-                    </span>
-                    {opt}
-                  </div>
-                ))}
-              </div>
-              <div className="mt-3 rounded-lg border border-[#22C55E]/20 bg-[#22C55E]/10 p-3">
-                <p className="text-xs font-semibold text-[#22C55E]">✓ Correto!</p>
-                <p className="mt-0.5 text-xs text-foreground">CloudFront distribui conteúdo via edge locations com baixa latência.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      <HeroSection
+        title="Powered by Amazon Bedrock AI"
+        subtitle={{
+          regular: 'A forma mais inteligente de se preparar para ',
+          gradient: 'certificações AWS',
+        }}
+        description="Questões geradas por IA com feedback personalizado e plano de estudos sob medida. Estude no seu ritmo e chegue preparado para o exame."
+        ctaText="Começar grátis"
+        ctaHref="/login"
+        secondaryCtaText="Ver como funciona"
+        onSecondaryCtaClick={() => document.getElementById('como-funciona')?.scrollIntoView({ behavior: 'smooth' })}
+        gridOptions={{
+          angle: 65,
+          opacity: 0.4,
+          cellSize: 55,
+        }}
+      />
 
       {/* ── Social proof ────────────────────────────────────────── */}
       <section className="bg-primary py-12">
