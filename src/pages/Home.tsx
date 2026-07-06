@@ -40,6 +40,90 @@ const TONE_BG: Record<string, string> = {
   r: 'bg-danger/10 text-danger',
 }
 
+const HEX_GRAD: Record<string, [string, string]> = {
+  'clf-c02': ['#FF9900', '#E65C00'],
+  'saa-c03': ['#3B82F6', '#1D4ED8'],
+  'dva-c02': ['#22C55E', '#15803D'],
+}
+
+const CERT_TIER: Record<string, string> = {
+  'clf-c02': 'FOUNDATIONAL',
+  'saa-c03': 'ASSOCIATE',
+  'dva-c02': 'ASSOCIATE',
+}
+
+// ── HexBadge ─────────────────────────────────────────────────────────────────
+
+function HexBadge({ certId, code, locked = false }: { certId: string; code: string; locked?: boolean }) {
+  const [from, to] = HEX_GRAD[certId] ?? ['#6366F1', '#4338CA']
+  const tier = CERT_TIER[certId] ?? 'ASSOCIATE'
+  const gid = `hx-${certId}`
+  return (
+    <div
+      className="w-[52px] h-[52px] shrink-0 relative flex items-center justify-center"
+      style={locked ? { opacity: 0.5, filter: 'grayscale(.35)' } : undefined}
+    >
+      <svg viewBox="0 0 100 108" className="absolute inset-0 w-full h-full">
+        <defs>
+          <linearGradient id={gid} x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stopColor={from} />
+            <stop offset="1" stopColor={to} />
+          </linearGradient>
+        </defs>
+        <path d="M50 2 95 28 95 80 50 106 5 80 5 28Z" fill={`url(#${gid})`} />
+        {!locked && (
+          <path d="M50 2 95 28 95 80 50 106 5 80 5 28Z"
+            fill="none" stroke="rgba(255,255,255,.35)" strokeWidth="2" />
+        )}
+        <path d="M50 12 86 33 86 75 50 96 14 75 14 33Z"
+          fill="none" stroke="rgba(255,255,255,.2)" strokeWidth="1.5" />
+      </svg>
+      <span className="relative z-10 font-sans font-extrabold text-[11px] text-white tracking-wide leading-none">
+        {code}
+      </span>
+      <span className="absolute -bottom-[3px] left-1/2 -translate-x-1/2 z-20 text-[6.5px] font-extrabold
+        tracking-wider bg-card border border-border text-muted-foreground px-1.5 py-px rounded-full whitespace-nowrap">
+        {tier}
+      </span>
+    </div>
+  )
+}
+
+// ── TrackEmptyState ───────────────────────────────────────────────────────────
+
+function TrackEmptyState({ onGenerate }: { onGenerate: () => void }) {
+  return (
+    <div className="flex flex-col items-center text-center px-6 py-9 mt-1
+      border-[1.5px] border-dashed border-border rounded-[18px] bg-muted/20">
+      <svg width="132" height="96" viewBox="0 0 132 96" fill="none" aria-hidden="true">
+        <rect x="18" y="26" width="96" height="60" rx="8" fill="white" stroke="#E2E8F0" strokeWidth="2" />
+        <rect x="18" y="26" width="96" height="16" rx="8" fill="#EEF0FF" />
+        <circle cx="28" cy="34" r="2.4" fill="#3B39E8" />
+        <circle cx="36" cy="34" r="2.4" fill="#E2E8F0" />
+        <rect x="30" y="52" width="46" height="7" rx="3.5" fill="#E2E8F0" />
+        <rect x="30" y="64" width="72" height="6" rx="3" fill="#EEF0FF" />
+        <rect x="30" y="74" width="58" height="6" rx="3" fill="#EEF0FF" />
+        <circle cx="98" cy="30" r="22" fill="#3B39E8" fillOpacity="0.1" />
+        <circle cx="98" cy="30" r="15" fill="none" stroke="#3B39E8" strokeWidth="2.4" strokeDasharray="4 5" />
+        <path d="M92 30l4 4 9-9" stroke="#3B39E8" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+      <h4 className="font-sans text-base font-bold text-foreground mt-4 mb-1">
+        Pronto para uma nova trilha?
+      </h4>
+      <p className="text-[13px] text-muted-foreground max-w-xs leading-relaxed mb-5">
+        Gere um plano de estudos personalizado por IA para a sua próxima certificação e comece do seu nível atual.
+      </p>
+      <button
+        onClick={onGenerate}
+        className="inline-flex items-center gap-1.5 bg-primary hover:bg-primary-hover
+          text-white font-bold text-sm px-5 py-2.5 rounded-[10px] transition-colors active:scale-95"
+      >
+        <Sparkles className="w-4 h-4" /> Gerar plano com IA
+      </button>
+    </div>
+  )
+}
+
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 function pad(n: number) { return String(n).padStart(2, '0') }
@@ -611,11 +695,8 @@ export function Home() {
                         : 'border-border hover:border-primary/30 hover:shadow-md hover:translate-x-0.5',
                     )}
                   >
-                    <div
-                      className="w-11 h-11 rounded-xl flex items-center justify-center text-white text-xs font-extrabold font-sans flex-shrink-0"
-                      style={{ background: cert.color }}
-                    >
-                      {cert.code.split('-')[0]}
+                    <div className="pb-1">
+                      <HexBadge certId={cert.id} code={cert.code.split('-')[0]} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
@@ -637,6 +718,9 @@ export function Home() {
                 ))}
               </div>
             </section>
+
+            {/* Study plan track */}
+            <TrackEmptyState onGenerate={() => navigate('/plano-de-estudos')} />
 
             {/* Difficulty selection */}
             {selectedCert && (
