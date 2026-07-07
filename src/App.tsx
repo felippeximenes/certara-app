@@ -21,7 +21,6 @@ const StudyPlan = lazy(() => import('./pages/StudyPlan').then(m => ({ default: m
 
 const TITLE_MAP: Record<string, string> = {
   '/': 'Certara',
-  '/landing': 'Certara',
   '/login': 'Entrar — Certara',
   '/app': 'Início — Certara',
   '/quiz': 'Quiz — Certara',
@@ -64,7 +63,6 @@ export function App() {
       <Suspense fallback={<PageFallback />}>
         <Routes>
           <Route path="/" element={<Landing />} />
-          <Route path="/landing" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/termos" element={<Terms />} />
           <Route path="/privacidade" element={<Privacy />} />

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import {
   LogOut, Zap, Star, Trophy, Crown, Flame, Target, Layers, BookOpen,
   LayoutDashboard, BarChart3, Sparkles, Play, Menu, Check, Brain,
-  TrendingUp, ChevronRight,
+  TrendingUp, ChevronRight, ChevronDown,
 } from 'lucide-react'
 import { Logo } from '../components/Logo'
 import { Onboarding } from '../components/Onboarding'
@@ -430,7 +430,7 @@ export function Home() {
           <div className="flex-1" />
 
           {streak > 0 && (
-            <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-[10px] font-bold text-sm text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-950/40 border border-orange-200 dark:border-orange-800/50">
+            <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-[10px] font-bold text-sm text-orange-600 bg-orange-50 border border-orange-200">
               <Flame className="h-4 w-4" /> {streak} dias
             </div>
           )}
@@ -673,103 +673,125 @@ export function Home() {
               </div>
             </div>
 
-            {/* Cert selection */}
+            {/* Cert selection + inline difficulty */}
             <section id="cert-selection" className="space-y-3">
               <div className="flex items-center justify-between">
                 <h3 className="font-sans text-base font-bold text-foreground">
-                  {history.length > 0 ? 'Suas certificações' : '1. Selecione a certificação'}
+                  {history.length > 0 ? 'Suas certificações' : 'Selecione a certificação'}
                 </h3>
                 <span className="text-[10.5px] font-bold tracking-widest text-muted-foreground uppercase">
                   Passo 1 · escolha a trilha
                 </span>
               </div>
+
               <div className="space-y-2.5">
-                {CERTIFICATIONS.map((cert) => (
-                  <button
-                    key={cert.id}
-                    onClick={() => setSelectedCert(cert.id)}
-                    className={cn(
-                      'w-full flex items-center gap-4 rounded-[14px] border bg-card px-5 py-4 text-left transition-all duration-200 shadow-sm',
-                      selectedCert === cert.id
-                        ? 'border-primary shadow-md shadow-primary/10 bg-primary/5 ring-2 ring-primary/15'
-                        : 'border-border hover:border-primary/30 hover:shadow-md hover:translate-x-0.5',
-                    )}
-                  >
-                    <div className="pb-1">
-                      <HexBadge certId={cert.id} code={cert.code.split('-')[0]} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="font-sans text-sm font-extrabold" style={{ color: cert.color }}>{cert.code}</span>
-                        <span className="font-sans text-sm font-semibold text-foreground truncate">{cert.name}</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <span className="rounded-full border border-border px-2.5 py-0.5 text-xs text-muted-foreground">
-                        {cert.level}
-                      </span>
-                      {selectedCert === cert.id && (
-                        <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
-                          <Check className="h-3.5 w-3.5 text-white" />
+                {CERTIFICATIONS.map((cert) => {
+                  const isSelected = selectedCert === cert.id
+                  return (
+                    <div
+                      key={cert.id}
+                      className={cn(
+                        'rounded-[14px] border bg-card shadow-sm transition-all duration-200 overflow-hidden',
+                        isSelected
+                          ? 'border-primary shadow-md shadow-primary/10 ring-1 ring-primary/20'
+                          : 'border-border hover:border-primary/30 hover:shadow-md',
+                      )}
+                    >
+                      {/* Cert header row */}
+                      <button
+                        className={cn(
+                          'w-full flex items-center gap-4 px-5 py-4 text-left transition-colors',
+                          isSelected ? 'bg-primary/5' : 'hover:bg-muted/20',
+                        )}
+                        onClick={() => setSelectedCert(isSelected ? '' : cert.id)}
+                      >
+                        <div className="pb-1">
+                          <HexBadge certId={cert.id} code={cert.code.split('-')[0]} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="font-sans text-sm font-extrabold" style={{ color: cert.color }}>{cert.code}</span>
+                            <span className="font-sans text-sm font-semibold text-foreground truncate">{cert.name}</span>
+                          </div>
+                          {isSelected && (
+                            <p className="text-xs text-primary/80 font-medium mt-0.5">Escolha a dificuldade abaixo ↓</p>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <span className="rounded-full border border-border px-2.5 py-0.5 text-xs text-muted-foreground">
+                            {cert.level}
+                          </span>
+                          <div className={cn(
+                            'w-6 h-6 rounded-full flex items-center justify-center transition-all duration-200',
+                            isSelected ? 'bg-primary rotate-180' : 'bg-muted/50',
+                          )}>
+                            {isSelected
+                              ? <Check className="h-3.5 w-3.5 text-white" />
+                              : <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+                            }
+                          </div>
+                        </div>
+                      </button>
+
+                      {/* Inline difficulty panel */}
+                      {isSelected && (
+                        <div className="px-5 pb-5 animate-fade-in" style={{ background: 'linear-gradient(to bottom, rgba(59,57,232,0.04), transparent)' }}>
+                          <div className="h-px bg-primary/12 mb-4" />
+                          {quotaExhausted ? (
+                            <div className="rounded-[14px] border border-primary/20 bg-card p-5 text-center space-y-3">
+                              <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-primary/15">
+                                <Crown className="h-5 w-5 text-primary" />
+                              </div>
+                              <div>
+                                <p className="font-sans text-sm font-bold text-foreground">Limite diário atingido</p>
+                                <p className="text-xs text-muted-foreground mt-0.5">
+                                  Você usou os {DAILY_LIMIT} quizzes gratuitos de hoje.<br />
+                                  Volte amanhã ou assine o Premium.
+                                </p>
+                              </div>
+                              <button
+                                onClick={() => navigate('/assinatura')}
+                                className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 font-sans text-sm font-semibold text-white hover:bg-primary-hover transition-colors"
+                              >
+                                <Crown className="h-4 w-4" /> Ver planos
+                              </button>
+                            </div>
+                          ) : (
+                            <>
+                              <p className="text-[11px] font-bold text-primary/60 uppercase tracking-widest mb-3">
+                                Passo 2 · Escolha a dificuldade
+                              </p>
+                              <div className="grid grid-cols-3 gap-3">
+                                {DIFFICULTIES.map(({ label, icon: Icon, colorClass, bg, border, desc }) => (
+                                  <button
+                                    key={label}
+                                    onClick={() => handleSelectDifficulty(label)}
+                                    className={cn(
+                                      'flex flex-col items-center gap-2 rounded-[14px] border border-border bg-card p-4',
+                                      'transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 active:scale-95',
+                                      bg, border,
+                                    )}
+                                  >
+                                    <div className={cn('rounded-xl p-2.5', bg)}>
+                                      <Icon className={cn('h-5 w-5', colorClass)} />
+                                    </div>
+                                    <span className="font-sans text-sm font-semibold text-foreground">{label}</span>
+                                    <span className="text-center text-xs text-muted-foreground leading-tight">{desc}</span>
+                                  </button>
+                                ))}
+                              </div>
+                            </>
+                          )}
                         </div>
                       )}
                     </div>
-                  </button>
-                ))}
+                  )
+                })}
               </div>
             </section>
 
             {/* Study plan track */}
             <TrackEmptyState onGenerate={() => navigate('/plano-de-estudos')} />
-
-            {/* Difficulty selection */}
-            {selectedCert && (
-              <section className="space-y-3 animate-fade-in">
-                {quotaExhausted ? (
-                  <div className="rounded-2xl border border-primary/20 bg-primary/5 p-6 text-center space-y-4">
-                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/15">
-                      <Crown className="h-6 w-6 text-primary" />
-                    </div>
-                    <div className="space-y-1">
-                      <p className="font-sans text-base font-bold text-foreground">Limite diário atingido</p>
-                      <p className="text-sm text-muted-foreground">
-                        Você usou os {DAILY_LIMIT} quizzes gratuitos de hoje.<br />
-                        Volte amanhã ou assine o Premium para quizzes ilimitados.
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => navigate('/assinatura')}
-                      className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 font-sans text-sm font-semibold text-white hover:bg-primary-hover transition-colors"
-                    >
-                      <Crown className="h-4 w-4" /> Ver planos
-                    </button>
-                  </div>
-                ) : (
-                  <>
-                    <h3 className="font-sans text-base font-bold text-foreground">2. Selecione a dificuldade</h3>
-                    <div className="grid grid-cols-3 gap-3">
-                      {DIFFICULTIES.map(({ label, icon: Icon, colorClass, bg, border, desc }) => (
-                        <button
-                          key={label}
-                          onClick={() => handleSelectDifficulty(label)}
-                          className={cn(
-                            'flex flex-col items-center gap-2 rounded-[14px] border border-border p-4',
-                            'transition-all duration-200 hover:shadow-md active:scale-95',
-                            bg, border,
-                          )}
-                        >
-                          <div className={cn('rounded-xl p-2.5', bg)}>
-                            <Icon className={cn('h-5 w-5', colorClass)} />
-                          </div>
-                          <span className="font-sans text-sm font-semibold text-foreground">{label}</span>
-                          <span className="text-center text-xs text-muted-foreground leading-tight">{desc}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </>
-                )}
-              </section>
-            )}
           </div>
         </main>
       </div>

@@ -35,7 +35,7 @@ export function Logo({ size = 'md', variant = 'dark', className }: LogoProps) {
           text,
           variant === 'light'
             ? 'text-white'
-            : 'text-[#1E1B4B] dark:text-white',
+            : 'text-[#1E1B4B]',
         )}
       >
         Certara

@@ -207,8 +207,7 @@ quizzapp/
 │   │   ├── NotificationBell.tsx # Sino de notificações
 │   │   └── ProtectedRoute.tsx   # Guard de autenticação
 │   ├── hooks/
-│   │   ├── useParallax.ts       # Mouse parallax para cenas 3D
-│   │   └── useTheme.ts          # Light mode fixo (dark removido)
+│   │   └── useParallax.ts       # Mouse parallax para cenas 3D
 │   ├── styles/
 │   │   ├── login3d.css          # CSS 3D da cena do login (.scene/.stage/.fhex)
 │   │   └── hero3d.css           # CSS 3D da cena do hero (.hscene/.hstage/.hfhex)
