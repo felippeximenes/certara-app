@@ -8,23 +8,32 @@ Plataforma de preparação para certificações AWS com questões geradas por In
 
 ## Telas
 
-### Landing Page — Hero fullscreen com cena 3D
-![Landing](screenshots/01-landing-desktop.png)
-
 ### Login — Painel 3D com hexágonos flutuantes
-![Login](screenshots/02-login-desktop.png)
+![Login](screenshots/01-login-desktop.png)
+
+### Cadastro
+![Cadastro](screenshots/02-login-register-desktop.png)
 
 ### Home — Dashboard com badges e seleção inline
 ![Home](screenshots/03-home-desktop.png)
 
+### Home — Seleção de dificuldade (accordion inline)
+![Dificuldade](screenshots/04-home-difficulty-desktop.png)
+
 ### Quiz — Questão com progresso
-![Quiz](screenshots/04-quiz-desktop.png)
+![Quiz](screenshots/05-quiz-desktop.png)
+
+### Quiz — Resposta selecionada
+![Quiz selecionado](screenshots/06-quiz-selected-desktop.png)
 
 ### Feedback da IA após resposta
-![Feedback](screenshots/05-quiz-feedback-desktop.png)
+![Feedback](screenshots/07-quiz-feedback-desktop.png)
+
+### Resultado final
+![Resultado](screenshots/08-result-desktop.png)
 
 ### Histórico
-![Histórico](screenshots/06-history-desktop.png)
+![Histórico](screenshots/09-history-desktop.png)
 
 ---
 
@@ -81,7 +90,7 @@ Plataforma de preparação para certificações AWS com questões geradas por In
 | Quizzes/dia | 5 | Ilimitados |
 | Feedback IA | Sim | Sim |
 | Histórico | Últimos quizzes | Completo |
-| Preço | R$ 0 | R$ 9,90/mês |
+| Preço | R$ 0 | R$ 14,90/mês |
 
 - Checkout via **Stripe** (cartão de crédito)
 - Cancelamento com vigência até o fim do período pago

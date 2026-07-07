@@ -380,7 +380,7 @@ export function Landing() {
             <div>
               <p className="font-sans text-sm font-semibold text-primary uppercase tracking-wide">Premium</p>
               <div className="mt-1 flex items-end gap-1">
-                <p className="font-sans text-4xl font-extrabold text-foreground">R$ 29,90</p>
+                <p className="font-sans text-4xl font-extrabold text-foreground">R$ 14,90</p>
                 <p className="mb-1 text-sm text-muted-foreground">/mês</p>
               </div>
             </div>
