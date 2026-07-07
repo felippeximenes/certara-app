@@ -8,6 +8,9 @@ Plataforma de preparação para certificações AWS com questões geradas por In
 
 ## Telas
 
+### Landing Page — Hero fullscreen com cena 3D e navbar glassmorphism
+![Landing](screenshots/00-landing-desktop.png)
+
 ### Login — Painel 3D com hexágonos flutuantes
 ![Login](screenshots/01-login-desktop.png)
 
@@ -20,20 +23,11 @@ Plataforma de preparação para certificações AWS com questões geradas por In
 ### Home — Seleção de dificuldade (accordion inline)
 ![Dificuldade](screenshots/04-home-difficulty-desktop.png)
 
-### Quiz — Questão com progresso
-![Quiz](screenshots/05-quiz-desktop.png)
-
-### Quiz — Resposta selecionada
-![Quiz selecionado](screenshots/06-quiz-selected-desktop.png)
-
-### Feedback da IA após resposta
-![Feedback](screenshots/07-quiz-feedback-desktop.png)
-
-### Resultado final
-![Resultado](screenshots/08-result-desktop.png)
-
 ### Histórico
 ![Histórico](screenshots/09-history-desktop.png)
+
+### Assinatura
+![Assinatura](screenshots/10-subscription-desktop.png)
 
 ---
 
