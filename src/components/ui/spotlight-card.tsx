@@ -3,18 +3,9 @@ import { useEffect, useRef, ReactNode } from 'react'
 interface GlowCardProps {
   children: ReactNode
   className?: string
-  glowColor?: 'blue' | 'purple' | 'green' | 'red' | 'orange'
 }
 
-const glowColorMap = {
-  blue:   { base: 220, spread: 200 },
-  purple: { base: 280, spread: 300 },
-  green:  { base: 120, spread: 200 },
-  red:    { base: 0,   spread: 200 },
-  orange: { base: 30,  spread: 200 },
-}
-
-// Injected once into <head> on first mount
+// Injected once into <head> — controls border glow via ::before / ::after
 let stylesInjected = false
 const CSS = `
 [data-glow]::before,
@@ -37,16 +28,16 @@ const CSS = `
   background-image: radial-gradient(
     calc(var(--spotlight-size) * 0.75) calc(var(--spotlight-size) * 0.75) at
     calc(var(--x, 0) * 1px) calc(var(--y, 0) * 1px),
-    hsl(var(--hue, 210) calc(var(--saturation, 100) * 1%) calc(var(--lightness, 50) * 1%) / var(--border-spot-opacity, 1)),
+    hsl(var(--hue, 241) var(--saturation, 83%) var(--lightness, 60%) / var(--border-spot-opacity, 0.35)),
     transparent 100%
   );
-  filter: brightness(2);
+  filter: brightness(1.4);
 }
 [data-glow]::after {
   background-image: radial-gradient(
-    calc(var(--spotlight-size) * 0.5) calc(var(--spotlight-size) * 0.5) at
+    calc(var(--spotlight-size) * 0.4) calc(var(--spotlight-size) * 0.4) at
     calc(var(--x, 0) * 1px) calc(var(--y, 0) * 1px),
-    hsl(0 100% 100% / var(--border-light-opacity, 1)),
+    hsl(0 100% 100% / var(--border-light-opacity, 0.18)),
     transparent 100%
   );
 }
@@ -76,9 +67,8 @@ function injectStyles() {
   stylesInjected = true
 }
 
-export function GlowCard({ children, className = '', glowColor = 'blue' }: GlowCardProps) {
+export function GlowCard({ children, className = '' }: GlowCardProps) {
   const cardRef = useRef<HTMLDivElement>(null)
-  const { base, spread } = glowColorMap[glowColor]
 
   useEffect(() => {
     injectStyles()
@@ -99,26 +89,27 @@ export function GlowCard({ children, className = '', glowColor = 'blue' }: GlowC
       data-glow
       className={`relative rounded-2xl ${className}`}
       style={{
-        '--base': base,
-        '--spread': spread,
+        // Hue 241 = indigo/primary do design system; spread estreito = quase sem desvio de cor
+        '--base': '241',
+        '--spread': '18',
         '--radius': '14',
-        '--border': '2',
-        '--backdrop': 'hsl(0 0% 50% / 0.08)',
-        '--backup-border': 'var(--backdrop)',
-        '--size': '280',
+        '--border': '1.5',
+        '--size': '160',
         '--outer': '1',
-        '--border-size': 'calc(var(--border, 2) * 1px)',
-        '--spotlight-size': 'calc(var(--size, 150) * 1px)',
+        '--border-size': 'calc(var(--border, 1.5) * 1px)',
+        '--spotlight-size': 'calc(var(--size, 160) * 1px)',
         '--hue': 'calc(var(--base) + (var(--xp, 0) * var(--spread, 0)))',
+        // Glow de fundo — muito sutil para não competir com o conteúdo
         backgroundImage: `radial-gradient(
           var(--spotlight-size) var(--spotlight-size) at
           calc(var(--x, 0) * 1px) calc(var(--y, 0) * 1px),
-          hsl(var(--hue, 210) 100% 70% / 0.08),
+          hsl(var(--hue, 241) 83% 65% / 0.05),
           transparent
         )`,
-        backgroundColor: 'var(--backdrop, transparent)',
+        backgroundColor: 'transparent',
         backgroundAttachment: 'fixed',
-        border: 'var(--border-size) solid var(--backup-border)',
+        // Border usa o token --border do design system
+        border: 'var(--border-size) solid hsl(var(--border))',
         touchAction: 'none',
       } as React.CSSProperties}
     >

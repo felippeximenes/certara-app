@@ -260,10 +260,7 @@ export function Landing() {
         <div className="grid gap-6 md:grid-cols-3">
           {STEPS.map(({ icon: Icon, num, title, desc }, i) => (
             <motion.div key={title} {...slideLeft(i * 0.12, shouldReduce)}>
-              <GlowCard
-                glowColor="blue"
-                className="p-6 flex flex-col gap-4 h-full"
-              >
+              <GlowCard className="p-6 flex flex-col gap-4 h-full">
                 <div className="flex items-center gap-3">
                   <span className="font-sans text-3xl font-extrabold text-primary/20">{num}</span>
                   <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
@@ -290,10 +287,7 @@ export function Landing() {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {FEATURES.map(({ icon: Icon, title, desc }, i) => (
               <motion.div key={title} {...scaleIn(i * 0.07, shouldReduce)}>
-                <GlowCard
-                  glowColor="purple"
-                  className="p-5 flex flex-col gap-3 h-full"
-                >
+                <GlowCard className="p-5 flex flex-col gap-3 h-full">
                   <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
                     <Icon className="h-5 w-5 text-primary" />
                   </div>
