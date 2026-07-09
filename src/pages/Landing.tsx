@@ -11,6 +11,7 @@ import { Logo } from '../components/Logo'
 import { TestimonialsColumn } from '../components/ui/testimonials-columns-1'
 import { HeroSection } from '../components/ui/hero-section-dark'
 import { HeroScene } from '../components/HeroScene'
+import { GlowCard } from '../components/ui/spotlight-card'
 import { cn } from '@/lib/utils'
 
 // ── Depoimentos de estudantes aprovados em certificações AWS ──────────────────
@@ -258,21 +259,22 @@ export function Landing() {
         </motion.div>
         <div className="grid gap-6 md:grid-cols-3">
           {STEPS.map(({ icon: Icon, num, title, desc }, i) => (
-            <motion.div
-              key={title}
-              className="rounded-2xl border border-border bg-card p-6 space-y-4"
-              {...slideLeft(i * 0.12, shouldReduce)}
-            >
-              <div className="flex items-center gap-3">
-                <span className="font-sans text-3xl font-extrabold text-primary/20">{num}</span>
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
-                  <Icon className="h-5 w-5 text-primary" />
+            <motion.div key={title} {...slideLeft(i * 0.12, shouldReduce)}>
+              <GlowCard
+                glowColor="blue"
+                className="p-6 flex flex-col gap-4 h-full"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="font-sans text-3xl font-extrabold text-primary/20">{num}</span>
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+                    <Icon className="h-5 w-5 text-primary" />
+                  </div>
                 </div>
-              </div>
-              <div>
-                <h3 className="font-sans text-base font-bold text-foreground">{title}</h3>
-                <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{desc}</p>
-              </div>
+                <div>
+                  <h3 className="font-sans text-base font-bold text-foreground">{title}</h3>
+                  <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{desc}</p>
+                </div>
+              </GlowCard>
             </motion.div>
           ))}
         </div>
@@ -287,18 +289,19 @@ export function Landing() {
           </motion.div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {FEATURES.map(({ icon: Icon, title, desc }, i) => (
-              <motion.div
-                key={title}
-                className="group rounded-2xl border border-border bg-background p-5 space-y-3 hover:border-primary/40 hover:shadow-md transition-all duration-200"
-                {...scaleIn(i * 0.07, shouldReduce)}
-              >
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 group-hover:bg-primary/20 transition-colors">
-                  <Icon className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <h3 className="font-sans text-sm font-bold text-foreground">{title}</h3>
-                  <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{desc}</p>
-                </div>
+              <motion.div key={title} {...scaleIn(i * 0.07, shouldReduce)}>
+                <GlowCard
+                  glowColor="purple"
+                  className="p-5 flex flex-col gap-3 h-full"
+                >
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+                    <Icon className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-sans text-sm font-bold text-foreground">{title}</h3>
+                    <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{desc}</p>
+                  </div>
+                </GlowCard>
               </motion.div>
             ))}
           </div>
