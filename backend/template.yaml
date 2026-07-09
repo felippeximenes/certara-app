@@ -72,10 +72,10 @@ Resources:
         - email
       Policies:
         PasswordPolicy:
-          MinimumLength: 8
-          RequireUppercase: false
-          RequireLowercase: false
-          RequireNumbers: false
+          MinimumLength: 12
+          RequireUppercase: true
+          RequireLowercase: true
+          RequireNumbers: true
           RequireSymbols: false
       Schema:
         - Name: email

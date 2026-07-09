@@ -1,7 +1,10 @@
-import json
+﻿import json
 import os
+import re
 import uuid
 from datetime import datetime, timezone
+
+_FP_RE = re.compile(r'^[A-Za-z0-9_\-]{8,128}$')
 
 import boto3
 from boto3.dynamodb.conditions import Attr  # noqa: F401
@@ -32,7 +35,13 @@ def _source_ip(event: dict) -> str:
 def _cors(body: dict, status: int = 200) -> dict:
     return {
         "statusCode": status,
-        "headers": {"Access-Control-Allow-Origin": "*", "Content-Type": "application/json"},
+        "headers": {
+        "Access-Control-Allow-Origin": "*",
+        "Content-Type": "application/json",
+        "X-Content-Type-Options": "nosniff",
+        "Cache-Control": "no-store",
+        "Strict-Transport-Security": "max-age=63072000; includeSubDomains",
+    },
         "body": json.dumps(body),
     }
 
@@ -108,9 +117,14 @@ def lambda_handler(event, _context):
 
         score = int(body.get("score", 0))
         total = int(body.get("total", 10))
+        if not (0 <= score <= total <= 100 and total > 0):
+            return _cors({"error": "Invalid score or total"}, 400)
         difficulty = str(body.get("difficulty", ""))
         answers = body.get("answers", [])
-        fingerprint: str | None = body.get("fingerprint") or None
+        if not isinstance(answers, list) or len(answers) > 100:
+            return _cors({"error": "Invalid answers"}, 400)
+        raw_fp = body.get("fingerprint") or ""
+        fingerprint: str | None = raw_fp if (isinstance(raw_fp, str) and _FP_RE.match(raw_fp)) else None
 
         # Aggregate per-domain stats
         domains: dict[str, dict] = {}
@@ -146,4 +160,4 @@ def lambda_handler(event, _context):
 
     except Exception as exc:
         print(f"[save-quiz] Erro: {exc}")
-        return _cors({"error": str(exc)}, 500)
+        return _cors({"error": "Internal server error. Please try again."}, 500)

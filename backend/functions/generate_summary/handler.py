@@ -1,4 +1,4 @@
-import json
+﻿import json
 import os
 
 import boto3
@@ -19,6 +19,9 @@ DOMAIN_LABELS = {
 CORS_HEADERS = {
     "Content-Type": "application/json",
     "Access-Control-Allow-Origin": "*",
+    "X-Content-Type-Options": "nosniff",
+    "Cache-Control": "no-store",
+    "Strict-Transport-Security": "max-age=63072000; includeSubDomains",
 }
 
 
@@ -115,4 +118,4 @@ def lambda_handler(event: dict, _context: object) -> dict:
     except (json.JSONDecodeError, KeyError, IndexError):
         return make_response(502, {"error": "Modelo retornou formato inesperado"})
     except Exception as exc:  # noqa: BLE001
-        return make_response(500, {"error": str(exc)})
+        return make_response(500, {"error": "Internal server error. Please try again."})

@@ -1,4 +1,4 @@
-import json
+﻿import json
 import os
 
 import boto3
@@ -12,9 +12,17 @@ bedrock = boto3.client("bedrock-runtime", region_name=BEDROCK_REGION)
 CORS_HEADERS = {
     "Content-Type": "application/json",
     "Access-Control-Allow-Origin": "*",
+    "X-Content-Type-Options": "nosniff",
+    "Cache-Control": "no-store",
+    "Strict-Transport-Security": "max-age=63072000; includeSubDomains",
 }
 
 REQUIRED_FIELDS = ["question", "options", "correct_answer", "selected_answer"]
+VALID_LETTERS = {"A", "B", "C", "D"}
+
+
+def _clip(text: object, max_len: int) -> str:
+    return str(text)[:max_len]
 
 
 def make_response(status: int, body: dict) -> dict:
@@ -74,6 +82,15 @@ def lambda_handler(event: dict, _context: object) -> dict:
         if missing:
             return make_response(400, {"error": f"Missing required fields: {missing}"})
 
+        correct_answer = str(body["correct_answer"]).strip().upper()
+        selected_answer = str(body["selected_answer"]).strip().upper()
+        if correct_answer not in VALID_LETTERS or selected_answer not in VALID_LETTERS:
+            return make_response(400, {"error": "Invalid answer letter"})
+
+        options = body["options"]
+        if not isinstance(options, list) or len(options) != 4:
+            return make_response(400, {"error": "options must be a list of 4 items"})
+
         bedrock_response = bedrock.converse(
             modelId=MODEL_ID,
             system=[{"text": (
@@ -81,12 +98,12 @@ def lambda_handler(event: dict, _context: object) -> dict:
                 "Responda sempre com JSON válido apenas — sem markdown, sem comentários."
             )}],
             messages=[{"role": "user", "content": [{"text": build_prompt(
-                question=body["question"],
-                options=body["options"],
-                correct_answer=body["correct_answer"],
-                selected_answer=body["selected_answer"],
-                domain=body.get("domain", ""),
-                explanation=body.get("explanation", ""),
+                question=_clip(body["question"], 2000),
+                options=[_clip(o, 500) for o in options],
+                correct_answer=correct_answer,
+                selected_answer=selected_answer,
+                domain=_clip(body.get("domain", ""), 100),
+                explanation=_clip(body.get("explanation", ""), 1000),
             )}]}],
             inferenceConfig={"maxTokens": 1024, "temperature": 0.7},
         )
@@ -108,4 +125,4 @@ def lambda_handler(event: dict, _context: object) -> dict:
     except (json.JSONDecodeError, KeyError, IndexError):
         return make_response(502, {"error": "Model returned an unexpected response format"})
     except Exception as exc:  # noqa: BLE001
-        return make_response(500, {"error": str(exc)})
+        return make_response(500, {"error": "Internal server error. Please try again."})

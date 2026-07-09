@@ -1,4 +1,4 @@
-import json
+﻿import json
 import os
 from datetime import datetime, timezone
 
@@ -15,7 +15,13 @@ stripe.api_key = STRIPE_SECRET_KEY
 dynamodb = boto3.resource("dynamodb")
 table = dynamodb.Table(TABLE_NAME)
 
-CORS = {"Access-Control-Allow-Origin": "*", "Content-Type": "application/json"}
+CORS = {
+    "Access-Control-Allow-Origin": "*",
+    "Content-Type": "application/json",
+    "X-Content-Type-Options": "nosniff",
+    "Cache-Control": "no-store",
+    "Strict-Transport-Security": "max-age=63072000; includeSubDomains",
+}
 
 
 def _user_id(event: dict) -> str:
@@ -69,4 +75,4 @@ def lambda_handler(event: dict, _context: object) -> dict:
 
     except Exception as exc:
         print(f"[create-checkout-session] Error: {exc}")
-        return _cors({"error": str(exc)}, 500)
+        return _cors({"error": "Internal server error. Please try again."}, 500)
