@@ -16,6 +16,7 @@ Globals:
         QDRANT_API_KEY: !Ref QdrantApiKey
         HISTORY_TABLE: !Ref QuizHistoryTable
         SUBSCRIPTIONS_TABLE: !Ref QuizSubscriptionsTable
+        FRONTEND_URL: !Ref FrontendUrl
 
 # ── Parameters ─────────────────────────────────────────────────────────────
 Parameters:
@@ -110,9 +111,12 @@ Resources:
               issuer: !Sub https://cognito-idp.${AWS::Region}.amazonaws.com/${UserPool}
               audience:
                 - !Ref UserPoolClient
+      DefaultRouteSettings:
+        ThrottlingBurstLimit: 30
+        ThrottlingRateLimit: 10
       CorsConfiguration:
         AllowOrigins:
-          - "*"
+          - !Ref FrontendUrl
         AllowMethods:
           - GET
           - POST

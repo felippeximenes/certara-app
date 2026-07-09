@@ -14,7 +14,7 @@ dynamodb = boto3.resource("dynamodb")
 table = dynamodb.Table(TABLE_NAME)
 
 CORS = {
-    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Origin": os.environ.get("FRONTEND_URL", "*"),
     "Content-Type": "application/json",
     "X-Content-Type-Options": "nosniff",
     "Cache-Control": "no-store",

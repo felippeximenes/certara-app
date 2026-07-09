@@ -18,7 +18,7 @@ DOMAIN_LABELS = {
 
 CORS_HEADERS = {
     "Content-Type": "application/json",
-    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Origin": os.environ.get("FRONTEND_URL", "*"),
     "X-Content-Type-Options": "nosniff",
     "Cache-Control": "no-store",
     "Strict-Transport-Security": "max-age=63072000; includeSubDomains",

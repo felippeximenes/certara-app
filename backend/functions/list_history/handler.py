@@ -17,7 +17,7 @@ def _cors(body: dict, status: int = 200) -> dict:
     return {
         "statusCode": status,
         "headers": {
-        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Origin": os.environ.get("FRONTEND_URL", "*"),
         "Content-Type": "application/json",
         "X-Content-Type-Options": "nosniff",
         "Cache-Control": "no-store",
