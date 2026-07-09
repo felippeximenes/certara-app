@@ -6,11 +6,9 @@ import { trackEvent } from '../services/analytics'
 import { cn } from '@/lib/utils'
 import type { SubscriptionStatus } from '../types/quiz'
 
-const DAILY_LIMIT = 5
-
 const FREE_FEATURES = [
   'Todas as certificações (CLF-C02, SAA-C03, DVA-C02)',
-  `${DAILY_LIMIT} quizzes por dia`,
+  '1 quiz gratuito para experimentar',
   'Feedback com IA após cada questão',
   'Histórico dos últimos quizzes',
 ]
@@ -200,7 +198,7 @@ export function Subscription() {
                   </p>
                 ) : (
                   <p className="text-xs text-muted-foreground">
-                    {sub?.quizzesToday ?? 0}/{DAILY_LIMIT} quizzes usados hoje
+                    {sub?.trialUsed ? 'Trial utilizado' : '1 quiz grátis disponível'}
                   </p>
                 )}
               </div>

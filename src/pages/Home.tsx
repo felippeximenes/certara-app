@@ -17,7 +17,7 @@ import type { SubscriptionStatus, QuizHistoryItem } from '../types/quiz'
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
-const DAILY_LIMIT = 5
+// Trial system: 1 free quiz per account, ever
 
 const DIFFICULTIES = [
   { label: 'Fácil',   icon: Zap,    colorClass: 'text-accent',  bg: 'bg-accent/10 hover:bg-accent/20',  border: 'hover:border-accent/50',  desc: 'Conceitos fundamentais' },
@@ -380,7 +380,7 @@ export function Home() {
   }
 
   const isPremium = sub?.plan === 'premium'
-  const quotaExhausted = !isPremium && sub !== null && (sub.quizzesRemaining ?? 1) <= 0
+  const trialExhausted = !isPremium && sub !== null && sub.trialUsed === true
   const name = email?.split('@')[0] ?? 'estudante'
   const streak = calcStreak(history)
   const avgPct = history.length ? Math.round(history.reduce((s, i) => s + i.pct, 0) / history.length) : 0
@@ -442,14 +442,16 @@ export function Home() {
                 'flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold transition-colors',
                 isPremium
                   ? 'bg-primary/15 text-primary hover:bg-primary/25'
-                  : quotaExhausted
+                  : trialExhausted
                     ? 'bg-danger/10 text-danger hover:bg-danger/20'
                     : 'bg-muted text-muted-foreground hover:bg-muted/80',
               )}
             >
               {isPremium
                 ? <><Crown className="h-3 w-3" /> Premium</>
-                : <><Zap className="h-3 w-3" /> {sub.quizzesRemaining ?? 0}/{DAILY_LIMIT}</>}
+                : trialExhausted
+                  ? <><Zap className="h-3 w-3" /> Trial usado</>
+                  : <><Zap className="h-3 w-3" /> 1 teste grátis</>}
             </button>
           )}
 
@@ -737,16 +739,16 @@ export function Home() {
                       {isSelected && (
                         <div className="px-5 pb-5 animate-fade-in" style={{ background: 'linear-gradient(to bottom, rgba(59,57,232,0.04), transparent)' }}>
                           <div className="h-px bg-primary/12 mb-4" />
-                          {quotaExhausted ? (
+                          {trialExhausted ? (
                             <div className="rounded-[14px] border border-primary/20 bg-card p-5 text-center space-y-3">
                               <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-primary/15">
                                 <Crown className="h-5 w-5 text-primary" />
                               </div>
                               <div>
-                                <p className="font-sans text-sm font-bold text-foreground">Limite diário atingido</p>
+                                <p className="font-sans text-sm font-bold text-foreground">Teste gratuito utilizado</p>
                                 <p className="text-xs text-muted-foreground mt-0.5">
-                                  Você usou os {DAILY_LIMIT} quizzes gratuitos de hoje.<br />
-                                  Volte amanhã ou assine o Premium.
+                                  Você já realizou seu quiz gratuito.<br />
+                                  Assine o Premium para continuar estudando.
                                 </p>
                               </div>
                               <button

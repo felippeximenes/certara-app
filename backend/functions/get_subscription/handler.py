@@ -6,7 +6,6 @@ from decimal import Decimal
 import boto3
 
 TABLE_NAME = os.environ["SUBSCRIPTIONS_TABLE"]
-DAILY_FREE_LIMIT = 5
 
 dynamodb = boto3.resource("dynamodb")
 table = dynamodb.Table(TABLE_NAME)
@@ -19,13 +18,19 @@ def _user_id(event: dict) -> str:
 
 
 def _cors(body: dict, status: int = 200) -> dict:
-    return {"statusCode": status, "headers": CORS, "body": json.dumps(body, default=lambda o: int(o) if isinstance(o, Decimal) else str(o))}
+    return {
+        "statusCode": status,
+        "headers": CORS,
+        "body": json.dumps(
+            body,
+            default=lambda o: int(o) if isinstance(o, Decimal) else str(o),
+        ),
+    }
 
 
 def lambda_handler(event: dict, _context: object) -> dict:
     try:
         user_id = _user_id(event)
-        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
         sub_resp = table.get_item(Key={"userId": user_id, "sortKey": "SUBSCRIPTION"})
         sub = sub_resp.get("Item", {})
@@ -36,8 +41,9 @@ def lambda_handler(event: dict, _context: object) -> dict:
             and int(sub.get("currentPeriodEnd", 0)) > now_ts
         )
 
-        quota_resp = table.get_item(Key={"userId": user_id, "sortKey": f"QUOTA#{today}"})
-        quizzes_today = int((quota_resp.get("Item") or {}).get("count", 0))
+        # Check whether the free trial has been consumed
+        trial_resp = table.get_item(Key={"userId": user_id, "sortKey": "TRIAL#USED"})
+        trial_used = bool(trial_resp.get("Item"))
 
         if is_premium:
             return _cors({
@@ -45,16 +51,15 @@ def lambda_handler(event: dict, _context: object) -> dict:
                 "status": sub.get("status"),
                 "currentPeriodEnd": sub.get("currentPeriodEnd"),
                 "stripeSubscriptionId": sub.get("stripeSubscriptionId"),
+                "trialUsed": True,        # premium always treated as trial consumed
                 "quizzesRemaining": None,
-                "quizzesToday": quizzes_today,
             })
 
-        remaining = max(0, DAILY_FREE_LIMIT - quizzes_today)
         return _cors({
             "plan": "free",
-            "quizzesRemaining": remaining,
-            "quizzesToday": quizzes_today,
-            "dailyLimit": DAILY_FREE_LIMIT,
+            "trialUsed": trial_used,
+            "quizzesRemaining": 0 if trial_used else 1,
+            "trialLimit": 1,
         })
 
     except Exception as exc:

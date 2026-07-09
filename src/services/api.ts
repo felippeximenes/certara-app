@@ -1,15 +1,26 @@
 import type { ApiQuestion, ApiFeedback, ApiSummary, QuizAnswer, QuizHistoryItem, SubscriptionStatus } from '../types/quiz'
 import { getIdToken } from './auth'
+import { getFingerprint } from './fingerprint'
 
 const API_URL = import.meta.env.VITE_API_URL ?? ''
 const TIMEOUT_MS = 30_000
 
 const HTTP_MESSAGES: Record<number, string> = {
-  429: 'Muitas requisições. Aguarde um momento.',
   503: 'Serviço temporariamente indisponível.',
   401: 'Sessão expirada. Faça login novamente.',
   403: 'Acesso negado.',
   500: 'Erro interno do servidor. Tente novamente.',
+}
+
+// Typed error that carries the backend error code (e.g. "trial_exhausted")
+export class ApiError extends Error {
+  constructor(
+    public readonly code: string,
+    message: string,
+  ) {
+    super(message)
+    this.name = 'ApiError'
+  }
 }
 
 async function authHeaders(): Promise<Record<string, string>> {
@@ -26,13 +37,22 @@ async function apiFetch(url: string, init: RequestInit): Promise<Response> {
   try {
     const res = await fetch(url, { ...init, signal: controller.signal })
     if (!res.ok) {
+      // Try to parse structured error from backend (e.g. trial_exhausted)
+      try {
+        const errBody = await res.clone().json() as { error?: string; message?: string }
+        if (errBody.error) {
+          throw new ApiError(errBody.error, errBody.message ?? errBody.error)
+        }
+      } catch (inner) {
+        if (inner instanceof ApiError) throw inner
+      }
       const msg = HTTP_MESSAGES[res.status] ?? `Erro ${res.status}. Tente novamente.`
-      throw new Error(msg)
+      throw new ApiError('http_error', msg)
     }
     return res
   } catch (err) {
     if (err instanceof DOMException && err.name === 'AbortError') {
-      throw new Error('Servidor demorou a responder. Tente novamente.')
+      throw new ApiError('timeout', 'Servidor demorou a responder. Tente novamente.')
     }
     throw err
   } finally {
@@ -45,10 +65,11 @@ export async function generateQuestion(
   difficulty: string,
   certification = 'clf-c02',
 ): Promise<ApiQuestion> {
+  const fingerprint = await getFingerprint()
   const res = await apiFetch(`${API_URL}/generate-question`, {
     method: 'POST',
     headers: await authHeaders(),
-    body: JSON.stringify({ domain, difficulty, certification }),
+    body: JSON.stringify({ domain, difficulty, certification, fingerprint }),
   })
   return res.json() as Promise<ApiQuestion>
 }
@@ -91,10 +112,11 @@ export async function saveQuiz(
   difficulty: string,
   answers: QuizAnswer[],
 ): Promise<void> {
+  const fingerprint = await getFingerprint()
   await apiFetch(`${API_URL}/save-quiz`, {
     method: 'POST',
     headers: await authHeaders(),
-    body: JSON.stringify({ score, total, difficulty, answers }),
+    body: JSON.stringify({ score, total, difficulty, answers, fingerprint }),
   })
 }
 

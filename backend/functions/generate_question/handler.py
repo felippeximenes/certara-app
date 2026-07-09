@@ -9,13 +9,15 @@ from rag import get_context
 BEDROCK_REGION = os.environ.get("BEDROCK_REGION", "us-east-1")
 MODEL_ID = os.environ.get("BEDROCK_MODEL_ID", "amazon.nova-pro-v1:0")
 SUBSCRIPTIONS_TABLE = os.environ.get("SUBSCRIPTIONS_TABLE", "")
-DAILY_FREE_LIMIT = 5
+
+# Partition key used for global device fingerprint records
+_FP_USER = "TRIAL_DEVICE"
 
 bedrock = boto3.client("bedrock-runtime", region_name=BEDROCK_REGION)
 _dynamodb = boto3.resource("dynamodb")
 _sub_table = _dynamodb.Table(SUBSCRIPTIONS_TABLE) if SUBSCRIPTIONS_TABLE else None
 
-# ── Per-certification domain descriptions ───────────────────────────────────
+# ── Per-certification domain descriptions ────────────────────────────────────
 
 CERT_DOMAINS: dict[str, dict[str, str]] = {
     "clf-c02": {
@@ -104,6 +106,79 @@ def make_response(status: int, body: dict) -> dict:
     }
 
 
+def _source_ip(event: dict) -> str:
+    """Extract caller IP from API Gateway HTTP v2 event."""
+    try:
+        return event["requestContext"]["http"]["sourceIp"]
+    except (KeyError, TypeError):
+        return "unknown"
+
+
+def _check_trial(event: dict, fingerprint: str | None) -> dict | None:
+    """
+    Returns a 4xx response if the user cannot access a trial quiz, else None.
+
+    Logic:
+      1. Premium users → always allowed.
+      2. Free users with TRIAL#USED already set → trial_exhausted.
+      3. Free users whose device fingerprint was already used → device_trial_exhausted.
+      4. Otherwise → allowed (trial not yet consumed).
+
+    IP is logged for monitoring; no hard-block on IP alone.
+    """
+    if not _sub_table:
+        return None
+    try:
+        claims = event["requestContext"]["authorizer"]["jwt"]["claims"]
+        user_id: str = claims["sub"]
+        source_ip = _source_ip(event)
+
+        # ── 1. Premium check ────────────────────────────────────────────────
+        sub_resp = _sub_table.get_item(Key={"userId": user_id, "sortKey": "SUBSCRIPTION"})
+        sub = sub_resp.get("Item") or {}
+        now_ts = datetime.now(timezone.utc).timestamp()
+        is_premium = (
+            sub.get("status") == "active"
+            and int(sub.get("currentPeriodEnd", 0)) > now_ts
+        )
+        if is_premium:
+            return None
+
+        # ── 2. Trial already used by this account ────────────────────────────
+        trial_resp = _sub_table.get_item(Key={"userId": user_id, "sortKey": "TRIAL#USED"})
+        if trial_resp.get("Item"):
+            print(f"[trial] BLOCKED account={user_id} ip={source_ip} reason=trial_exhausted")
+            return make_response(429, {
+                "error": "trial_exhausted",
+                "message": "Seu teste gratuito já foi utilizado. Assine o Premium para continuar.",
+            })
+
+        # ── 3. Device fingerprint already used (different or same account) ───
+        if fingerprint:
+            fp_resp = _sub_table.get_item(
+                Key={"userId": _FP_USER, "sortKey": f"FP#{fingerprint}"}
+            )
+            if fp_resp.get("Item"):
+                print(
+                    f"[trial] BLOCKED fingerprint={fingerprint[:12]}… "
+                    f"account={user_id} ip={source_ip} reason=device_trial_exhausted"
+                )
+                return make_response(429, {
+                    "error": "trial_exhausted",
+                    "message": "Seu teste gratuito já foi utilizado neste dispositivo. "
+                               "Assine o Premium para continuar.",
+                })
+
+        # ── 4. Log IP for monitoring (soft signal, not a block) ──────────────
+        print(f"[trial] ALLOWED account={user_id} ip={source_ip} fp={str(fingerprint)[:12] if fingerprint else 'none'}")
+
+    except Exception as exc:
+        # Non-fatal: don't block users if the check itself fails
+        print(f"[trial-check] Non-fatal error: {exc}")
+
+    return None
+
+
 def build_prompt(domain_key: str, difficulty: str, cert_id: str, context: str = "") -> str:
     domain_desc = CERT_DOMAINS[cert_id][domain_key]
     cert_name = CERT_NAMES[cert_id]
@@ -137,46 +212,17 @@ Responda APENAS com um objeto JSON — sem markdown, sem texto extra:
 }}{context_block}"""
 
 
-def _check_quota(event: dict) -> dict | None:
-    """Returns a 429 response if the free user has exhausted today's quota, else None."""
-    if not _sub_table:
-        return None
-    try:
-        claims = event["requestContext"]["authorizer"]["jwt"]["claims"]
-        user_id: str = claims["sub"]
-        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-
-        sub_resp = _sub_table.get_item(Key={"userId": user_id, "sortKey": "SUBSCRIPTION"})
-        sub = (sub_resp.get("Item") or {})
-        now_ts = datetime.now(timezone.utc).timestamp()
-        is_premium = (
-            sub.get("status") == "active"
-            and int(sub.get("currentPeriodEnd", 0)) > now_ts
-        )
-        if is_premium:
-            return None
-
-        quota_resp = _sub_table.get_item(Key={"userId": user_id, "sortKey": f"QUOTA#{today}"})
-        count = int((quota_resp.get("Item") or {}).get("count", 0))
-        if count >= DAILY_FREE_LIMIT:
-            return make_response(429, {
-                "error": "quota_exceeded",
-                "plan": "free",
-                "dailyLimit": DAILY_FREE_LIMIT,
-                "quizzesToday": count,
-            })
-    except Exception as exc:
-        print(f"[quota-check] Non-fatal error: {exc}")
-    return None
-
-
 def lambda_handler(event: dict, _context: object) -> dict:
     try:
-        quota_error = _check_quota(event)
-        if quota_error:
-            return quota_error
-
         body: dict = json.loads(event.get("body") or "{}")
+        fingerprint: str | None = body.get("fingerprint") or None
+
+        # ── Trial / access gate ──────────────────────────────────────────────
+        trial_error = _check_trial(event, fingerprint)
+        if trial_error:
+            return trial_error
+
+        # ── Question generation ───────────────────────────────────────────────
         domain: str = body.get("domain", "technology")
         difficulty: str = body.get("difficulty", "medium")
         cert_id: str = body.get("certification", "clf-c02").lower()

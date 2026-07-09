@@ -1,9 +1,9 @@
 ﻿import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ChevronRight, RotateCcw } from 'lucide-react'
+import { ChevronRight, Crown, RotateCcw } from 'lucide-react'
 import { ProgressBar } from '../components/ProgressBar'
 import { useQuizStore } from '../store/quizStore'
-import { generateQuestion, evaluateAnswer } from '../services/api'
+import { generateQuestion, evaluateAnswer, ApiError } from '../services/api'
 import { getCertification } from '../data/certifications'
 import { trackEvent } from '../services/analytics'
 import { cn } from '@/lib/utils'
@@ -31,18 +31,25 @@ export function Quiz() {
   const [question, setQuestion] = useState<ApiQuestion | null>(null)
   const [feedback, setFeedback] = useState<ApiFeedback | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [trialExhausted, setTrialExhausted] = useState(false)
 
   const cert = getCertification(certification)
   const difficulty = DIFFICULTY_MAP[subject] ?? 'easy'
   const isLastQuestion = currentQ === TOTAL - 1
 
   const fetchQuestion = useCallback(async (index: number) => {
-    setPhase('loading'); setQuestion(null); setSelected(null); setFeedback(null); setError(null)
+    setPhase('loading'); setQuestion(null); setSelected(null); setFeedback(null); setError(null); setTrialExhausted(false)
     try {
       const domain = cert.domains[index % cert.domains.length]
       const q = await generateQuestion(domain, difficulty, certification)
       setQuestion(q); setPhase('selecting')
-    } catch { setError('Erro ao gerar pergunta. Tente novamente.') }
+    } catch (err) {
+      if (err instanceof ApiError && err.code === 'trial_exhausted') {
+        setTrialExhausted(true)
+      } else {
+        setError('Erro ao gerar pergunta. Tente novamente.')
+      }
+    }
   }, [difficulty, certification, cert.domains])
 
   useEffect(() => {
@@ -95,6 +102,27 @@ export function Quiz() {
     correct: 'border-success bg-success/10 text-success',
     wrong: 'border-danger bg-danger/10 text-danger',
   }
+
+  if (trialExhausted) return (
+    <div className="flex min-h-svh flex-col items-center justify-center gap-4 p-6 text-center">
+      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/15">
+        <Crown className="h-7 w-7 text-primary" />
+      </div>
+      <div className="space-y-1">
+        <p className="font-sans text-base font-bold text-foreground">Teste gratuito utilizado</p>
+        <p className="text-sm text-muted-foreground">
+          Você já realizou seu quiz gratuito.<br />
+          Assine o Premium para continuar estudando.
+        </p>
+      </div>
+      <button
+        onClick={() => navigate('/assinatura')}
+        className="flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary-hover transition-colors"
+      >
+        <Crown className="h-4 w-4" /> Ver planos Premium
+      </button>
+    </div>
+  )
 
   if (error) return (
     <div className="flex min-h-svh flex-col items-center justify-center gap-4 p-4">

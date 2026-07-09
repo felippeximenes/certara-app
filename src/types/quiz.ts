@@ -56,9 +56,9 @@ export interface QuizHistoryItem {
 
 export interface SubscriptionStatus {
   plan: 'free' | 'premium'
+  trialUsed: boolean
   quizzesRemaining: number | null
-  quizzesToday: number
-  dailyLimit?: number
+  trialLimit?: number
   status?: string
   currentPeriodEnd?: number
   stripeSubscriptionId?: string

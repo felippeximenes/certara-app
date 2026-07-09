@@ -82,6 +82,8 @@ Resources:
           AttributeDataType: String
           Required: true
           Mutable: true
+      LambdaConfig:
+        PreSignUp: !GetAtt ValidateEmailFunction.Arn
 
   UserPoolClient:
     Type: AWS::Cognito::UserPoolClient
@@ -205,6 +207,24 @@ Resources:
             Resource: "*"
 
   # ── Lambda Functions ───────────────────────────────────────────────────────
+
+  # 0 — validate email on signup (Cognito Pre-Signup trigger)
+  ValidateEmailFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: quizzapp-validate-email
+      Handler: handler.lambda_handler
+      CodeUri: functions/validate_email/
+      Description: Cognito Pre-Signup trigger — blocks disposable/temporary email domains
+
+  # Allows Cognito to invoke the Pre-Signup trigger Lambda
+  ValidateEmailCognitoPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt ValidateEmailFunction.Arn
+      Action: lambda:InvokeFunction
+      Principal: cognito-idp.amazonaws.com
+      SourceArn: !GetAtt UserPool.Arn
 
   # 1 — generate question (with quota check)
   GenerateQuestionFunction:
