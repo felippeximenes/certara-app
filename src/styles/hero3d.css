@@ -48,4 +48,9 @@
 @keyframes fl2 { 0%,100%{margin-top:0}  50%{margin-top:-13px} }
 @keyframes fl3 { 0%,100%{margin-top:0}  50%{margin-top:-10px} }
 
+@media (max-width: 640px) {
+  .hfhex.h3 { right: 2px; }
+  .hfhex.h2 { left: -10px; }
+}
+
 @media (prefers-reduced-motion:reduce) { .hfhex,.horb { animation:none; } }

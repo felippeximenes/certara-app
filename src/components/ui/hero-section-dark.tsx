@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { Link } from 'react-router-dom'
-import { ChevronRight } from 'lucide-react'
+import { ChevronRight, Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 // ── RetroGrid ────────────────────────────────────────────────────────────────
@@ -64,6 +64,8 @@ interface HeroSectionProps extends React.HTMLAttributes<HTMLDivElement> {
   ctaHref?: string
   secondaryCtaText?: string
   onSecondaryCtaClick?: () => void
+  /** Conteúdo extra abaixo dos botões CTA (ex: trust section) */
+  belowCtaContent?: React.ReactNode
   /** Conteúdo exibido à direita em telas lg+ (ativa layout 2 colunas) */
   rightContent?: React.ReactNode
   bottomImage?: {
@@ -87,6 +89,7 @@ const HeroSection = React.forwardRef<HTMLDivElement, HeroSectionProps>(
       ctaHref = '/login',
       secondaryCtaText,
       onSecondaryCtaClick,
+      belowCtaContent,
       rightContent,
       bottomImage,
       gridOptions,
@@ -118,6 +121,7 @@ const HeroSection = React.forwardRef<HTMLDivElement, HeroSectionProps>(
 
                 {/* Badge */}
                 <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-2 text-sm font-semibold text-primary group cursor-default">
+                  <Sparkles className="h-3.5 w-3.5 flex-shrink-0" />
                   {title}
                   <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-200" />
                 </div>
@@ -172,6 +176,9 @@ const HeroSection = React.forwardRef<HTMLDivElement, HeroSectionProps>(
                     </button>
                   )}
                 </div>
+
+                {/* Conteúdo abaixo dos CTAs (trust section, etc.) */}
+                {belowCtaContent}
               </div>
 
               {/* ── Conteúdo direito (quiz mockup, imagem, etc.) ── */}

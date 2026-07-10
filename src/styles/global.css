@@ -56,6 +56,30 @@
   }
 }
 
+/* Glassmorphism pricing card */
+.glass-card {
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 12px 17px 51px rgba(59, 57, 232, 0.18);
+  border-radius: 17px;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+.dark .glass-card {
+  background: rgba(59, 57, 232, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 12px 17px 51px rgba(0, 0, 0, 0.45);
+}
+.glass-card:hover {
+  border-color: rgba(255, 255, 255, 1);
+  box-shadow: 12px 17px 51px rgba(59, 57, 232, 0.30);
+}
+.dark .glass-card:hover {
+  border-color: rgba(255, 255, 255, 0.22);
+  box-shadow: 12px 17px 51px rgba(59, 57, 232, 0.35);
+}
+
 /* Flashcard 3D flip */
 .flashcard-scene {
   perspective: 1400px;

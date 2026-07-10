@@ -93,6 +93,9 @@ module.exports = {
           '0%':   { transform: 'rotate(0deg)' },
           '100%': { transform: 'rotate(360deg)' },
         },
+        'border-beam': {
+          '100%': { 'offset-distance': '100%' },
+        },
       },
       animation: {
         'fade-in':   'fade-in 200ms cubic-bezier(0.16, 1, 0.3, 1)',
@@ -101,6 +104,7 @@ module.exports = {
         'pulse-soft': 'pulse-soft 2s ease-in-out infinite',
         shimmer: 'shimmer 1.5s linear infinite',
         grid: 'grid 18s linear infinite',
+        'border-beam': 'border-beam calc(var(--duration)*1s) infinite linear',
       },
     },
   },
