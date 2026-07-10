@@ -94,22 +94,23 @@ export function GlowCard({ children, className = '' }: GlowCardProps) {
         '--spread': '18',
         '--radius': '14',
         '--border': '1.5',
-        '--size': '160',
+        '--size': '200',
         '--outer': '1',
         '--border-size': 'calc(var(--border, 1.5) * 1px)',
-        '--spotlight-size': 'calc(var(--size, 160) * 1px)',
+        '--spotlight-size': 'calc(var(--size, 200) * 1px)',
         '--hue': 'calc(var(--base) + (var(--xp, 0) * var(--spread, 0)))',
-        // Glow de fundo — muito sutil para não competir com o conteúdo
-        backgroundImage: `radial-gradient(
-          var(--spotlight-size) var(--spotlight-size) at
-          calc(var(--x, 0) * 1px) calc(var(--y, 0) * 1px),
-          hsl(var(--hue, 241) 83% 65% / 0.05),
-          transparent
-        )`,
-        backgroundColor: 'transparent',
-        backgroundAttachment: 'fixed',
-        // Border usa o token --border do design system
+        // Duas camadas: spotlight (fixed, segue cursor) sobre o fundo do card
+        background: `
+          radial-gradient(
+            var(--spotlight-size) var(--spotlight-size) at
+            calc(var(--x, 0) * 1px) calc(var(--y, 0) * 1px),
+            hsl(var(--hue, 241) 83% 65% / 0.08),
+            transparent
+          ) fixed,
+          hsl(var(--card))
+        `,
         border: 'var(--border-size) solid hsl(var(--border))',
+        boxShadow: '0 2px 12px -4px hsl(var(--border) / 0.6)',
         touchAction: 'none',
       } as React.CSSProperties}
     >

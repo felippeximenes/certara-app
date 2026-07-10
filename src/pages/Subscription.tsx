@@ -4,6 +4,7 @@ import { ArrowLeft, Zap, Crown, Check, X, RefreshCw } from 'lucide-react'
 import { getSubscription, createCheckoutSession, cancelSubscription, createPortalSession } from '../services/api'
 import { trackEvent } from '../services/analytics'
 import { cn } from '@/lib/utils'
+import { ShineBorder } from '../components/ui/shine-border'
 import type { SubscriptionStatus } from '../types/quiz'
 
 const FREE_FEATURES = [
@@ -271,32 +272,32 @@ export function Subscription() {
               </div>
 
               {/* Premium card */}
-              <div className={cn(
-                'rounded-xl border p-5 space-y-4',
-                isPremium
-                  ? 'border-primary/30 bg-primary/5 ring-2 ring-primary/30'
-                  : 'border-primary/20 bg-card',
-              )}>
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <Crown className="h-4 w-4 text-primary" />
-                    <span className="font-sans text-sm font-bold text-primary">Premium</span>
-                    {isPremium && <span className="rounded-full bg-primary/15 px-2 py-0.5 text-xs font-semibold text-primary">Atual</span>}
+              <ShineBorder duration={5}>
+                <div className={cn(
+                  'p-5 space-y-4',
+                  isPremium ? 'bg-primary/5' : '',
+                )}>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <Crown className="h-4 w-4 text-primary" />
+                      <span className="font-sans text-sm font-bold text-primary">Premium</span>
+                      {isPremium && <span className="rounded-full bg-primary/15 px-2 py-0.5 text-xs font-semibold text-primary">Atual</span>}
+                    </div>
+                    <div className="flex items-end gap-1">
+                      <p className="font-sans text-2xl font-extrabold text-foreground">R$ 14,90</p>
+                      <p className="mb-0.5 text-xs text-muted-foreground">/mês</p>
+                    </div>
                   </div>
-                  <div className="flex items-end gap-1">
-                    <p className="font-sans text-2xl font-extrabold text-foreground">R$ 14,90</p>
-                    <p className="mb-0.5 text-xs text-muted-foreground">/mês</p>
-                  </div>
+                  <ul className="space-y-2">
+                    {PREMIUM_FEATURES.map((f) => (
+                      <li key={f} className="flex gap-2 text-xs text-foreground">
+                        <Check className="h-3.5 w-3.5 flex-shrink-0 text-primary mt-0.5" />
+                        {f}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-                <ul className="space-y-2">
-                  {PREMIUM_FEATURES.map((f) => (
-                    <li key={f} className="flex gap-2 text-xs text-foreground">
-                      <Check className="h-3.5 w-3.5 flex-shrink-0 text-primary mt-0.5" />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              </ShineBorder>
             </div>
 
             {/* CTA */}
