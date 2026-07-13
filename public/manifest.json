@@ -1,0 +1,28 @@
+{
+  "name": "Certara — Certificações AWS",
+  "short_name": "Certara",
+  "description": "Estude com inteligência. Certifique-se com confiança.",
+  "start_url": "/app",
+  "display": "standalone",
+  "background_color": "#0F0E2E",
+  "theme_color": "#3B39E8",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["education", "productivity"],
+  "lang": "pt-BR",
+  "dir": "ltr",
+  "scope": "/"
+}
