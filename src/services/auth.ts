@@ -3,8 +3,8 @@ import {
   confirmSignUp,
   signIn,
   signOut,
+  signInWithRedirect,
   fetchAuthSession,
-  getCurrentUser,
   resendSignUpCode,
 } from 'aws-amplify/auth'
 
@@ -25,6 +25,11 @@ export async function login(email: string, password: string) {
   return signIn({ username: email, password })
 }
 
+export async function loginWithGoogle() {
+  try { await signOut() } catch {}
+  return signInWithRedirect({ provider: 'Google' })
+}
+
 export async function logout() {
   return signOut()
 }
@@ -40,8 +45,13 @@ export async function getIdToken(): Promise<string | null> {
 
 export async function getCurrentEmail(): Promise<string | null> {
   try {
-    const user = await getCurrentUser()
-    return user.signInDetails?.loginId ?? null
+    // signInDetails.loginId is only populated for email/password users.
+    // For federated (Google OAuth) users the email lives in the idToken claims.
+    const session = await fetchAuthSession()
+    const idToken = session.tokens?.idToken
+    if (!idToken) return null
+    const email = idToken.payload?.email
+    return typeof email === 'string' ? email : null
   } catch {
     return null
   }

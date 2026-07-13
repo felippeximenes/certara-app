@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { fetchAuthSession } from 'aws-amplify/auth'
 import { getCurrentEmail, logout } from '../services/auth'
 
 interface AuthState {
@@ -9,15 +10,19 @@ interface AuthState {
   signOut: () => Promise<void>
 }
 
+// Prevents StrictMode double-invocation from racing on the OAuth code exchange
+let _initPromise: Promise<void> | null = null
+
 export const useAuthStore = create<AuthState>((set) => ({
   email: null,
   loading: true,
 
   setEmail: (email) => set({ email }),
 
-  init: async () => {
-    const email = await getCurrentEmail()
-    set({ email, loading: false })
+  init: () => {
+    if (_initPromise) return _initPromise
+    _initPromise = _doInit(set).finally(() => { _initPromise = null })
+    return _initPromise
   },
 
   signOut: async () => {
@@ -25,3 +30,34 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ email: null })
   },
 }))
+
+async function _doInit(set: (s: Partial<{ email: string | null; loading: boolean }>) => void) {
+  const params = new URLSearchParams(window.location.search)
+
+  if (params.has('error')) {
+    set({ email: null, loading: false })
+    return
+  }
+
+  if (params.has('code') && params.has('state')) {
+    for (let i = 0; i < 25; i++) {
+      await new Promise((r) => setTimeout(r, 200))
+      try {
+        const session = await fetchAuthSession()
+        const idToken = session.tokens?.idToken?.toString()
+        if (idToken) {
+          const email = await getCurrentEmail()
+          set({ email, loading: false })
+          return
+        }
+      } catch {
+        // retry
+      }
+    }
+    set({ email: null, loading: false })
+    return
+  }
+
+  const email = await getCurrentEmail()
+  set({ email, loading: false })
+}

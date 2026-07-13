@@ -1,5 +1,5 @@
-import { lazy, Suspense, useEffect } from 'react'
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { lazy, Suspense, useEffect, useRef } from 'react'
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { Home } from './pages/Home'
 import { Quiz } from './pages/Quiz'
 import { Result } from './pages/Result'
@@ -52,6 +52,29 @@ function RouteTracker() {
   return null
 }
 
+function OAuthRedirectHandler() {
+  const navigate = useNavigate()
+  const email   = useAuthStore((s) => s.email)
+  const loading = useAuthStore((s) => s.loading)
+
+  // Capture on first render — Amplify wipes ?code=&state= before the effect re-runs
+  const isOAuthCallback = useRef(
+    (() => {
+      const p = new URLSearchParams(window.location.search)
+      return p.has('code') && p.has('state')
+    })()
+  )
+
+  useEffect(() => {
+    if (isOAuthCallback.current && !loading) {
+      navigate(email ? '/app' : '/login', { replace: true })
+    }
+  }, [email, loading, navigate])
+
+
+  return null
+}
+
 export function App() {
   const init = useAuthStore((s) => s.init)
 
@@ -59,6 +82,7 @@ export function App() {
 
   return (
     <BrowserRouter>
+      <OAuthRedirectHandler />
       <RouteTracker />
       <Suspense fallback={<PageFallback />}>
         <Routes>

@@ -6,7 +6,7 @@ import {
   Mail, Lock, LockKeyhole, User,
   CheckCircle2, LogIn, UserPlus, ShieldCheck,
 } from 'lucide-react'
-import { register, confirmEmail, login, resendCode } from '../services/auth'
+import { register, confirmEmail, login, loginWithGoogle, resendCode } from '../services/auth'
 import { useAuthStore } from '../store/authStore'
 import { FloatingHex } from '../components/FloatingHex'
 import { useParallax } from '../hooks/useParallax'
@@ -156,9 +156,15 @@ export function Login() {
     } catch { setError('Não foi possível reenviar o código.') }
   }
 
-  function handleSocial() {
-    setSocialMsg('Login com Google em breve.')
-    setTimeout(() => setSocialMsg(''), 3000)
+  async function handleSocial() {
+    try {
+      await loginWithGoogle()
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      console.error('[Google Login]', msg)
+      setSocialMsg(msg || 'Erro ao iniciar login com Google.')
+      setTimeout(() => setSocialMsg(''), 8000)
+    }
   }
 
   function switchMode(m: Mode) { setMode(m); setError(''); setSocialMsg('') }
