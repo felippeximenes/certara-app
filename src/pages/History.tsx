@@ -77,6 +77,7 @@ export function History() {
   const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set())
   const [clearConfirm, setClearConfirm] = useState(false)
   const [clearing, setClearing] = useState(false)
+  const [certFilter, setCertFilter] = useState<string | null>(null)
 
   useEffect(() => {
     listHistory()
@@ -140,6 +141,9 @@ export function History() {
 
   const chartGrid = isDark ? '#312E81' : '#C7D2FE'
   const chartTick = isDark ? '#9CA3AF' : '#6B7280'
+
+  const availableCerts = [...new Set(items.map(i => i.certification).filter(Boolean))] as string[]
+  const filteredItems = certFilter ? items.filter(i => i.certification === certFilter) : items
 
   async function handleDelete(quizId: string) {
     if (confirmId !== quizId) {
@@ -340,9 +344,40 @@ export function History() {
               </div>
             </div>
 
+            {/* Cert filter chips */}
+            {availableCerts.length > 1 && (
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => setCertFilter(null)}
+                  className={cn(
+                    'rounded-full border px-3 py-1 text-xs font-semibold transition-colors',
+                    certFilter === null
+                      ? 'border-primary bg-primary/10 text-primary'
+                      : 'border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-primary',
+                  )}
+                >
+                  Todas
+                </button>
+                {availableCerts.map(cert => (
+                  <button
+                    key={cert}
+                    onClick={() => setCertFilter(cert === certFilter ? null : cert)}
+                    className={cn(
+                      'rounded-full border px-3 py-1 text-xs font-semibold transition-colors',
+                      certFilter === cert
+                        ? 'border-primary bg-primary/10 text-primary'
+                        : 'border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-primary',
+                    )}
+                  >
+                    {cert.toUpperCase()}
+                  </button>
+                ))}
+              </div>
+            )}
+
             {/* Quiz list */}
             <ul className="space-y-3">
-              {items.map((item) => {
+              {filteredItems.map((item) => {
                 const isConfirming = confirmId === item.quizId
                 const isDeleting = deletingIds.has(item.quizId)
                 return (

@@ -410,7 +410,7 @@ function SimResults() {
       difficulty: r.q.difficulty,
       correct: r.correct,
     }))
-    saveQuiz(score, SIM_TOTAL, 'Simulado', answers).catch(() => {})
+    saveQuiz(score, SIM_TOTAL, 'Simulado', answers, certification).catch(() => {})
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Batch evaluate wrong answers

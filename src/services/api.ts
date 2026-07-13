@@ -112,12 +112,13 @@ export async function saveQuiz(
   total: number,
   difficulty: string,
   answers: QuizAnswer[],
+  certification?: string,
 ): Promise<void> {
   const fingerprint = await getFingerprint()
   await apiFetch(`${API_URL}/save-quiz`, {
     method: 'POST',
     headers: await authHeaders(),
-    body: JSON.stringify({ score, total, difficulty, answers, fingerprint }),
+    body: JSON.stringify({ score, total, difficulty, answers, fingerprint, certification }),
   })
 }
 

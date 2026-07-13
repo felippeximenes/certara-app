@@ -28,7 +28,7 @@ export function Result() {
     if (!subject) { navigate('/app'); return }
     Promise.all([
       generateSummary(score, TOTAL, answers),
-      saveQuiz(score, TOTAL, subject, answers),
+      saveQuiz(score, TOTAL, subject, answers, certification),
     ])
       .then(([s]) => setSummary(s))
       .catch(() => setSummary(null))

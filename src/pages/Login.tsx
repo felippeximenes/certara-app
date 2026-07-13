@@ -6,7 +6,7 @@ import {
   Mail, Lock, LockKeyhole, User,
   CheckCircle2, LogIn, UserPlus, ShieldCheck,
 } from 'lucide-react'
-import { register, confirmEmail, login, loginWithGoogle, resendCode } from '../services/auth'
+import { register, confirmEmail, login, loginWithGoogle, resendCode, sendPasswordReset, confirmPasswordReset } from '../services/auth'
 import { useAuthStore } from '../store/authStore'
 import { FloatingHex } from '../components/FloatingHex'
 import { useParallax } from '../hooks/useParallax'
@@ -14,7 +14,7 @@ import { trackEvent } from '../services/analytics'
 import { cn } from '@/lib/utils'
 import '../styles/login3d.css'
 
-type Mode = 'login' | 'register' | 'confirm'
+type Mode = 'login' | 'register' | 'confirm' | 'forgot' | 'forgot-confirm'
 
 const BULLETS = [
   { Icon: Sparkles,         text: 'Questões AWS geradas por IA em tempo real' },
@@ -110,6 +110,10 @@ export function Login() {
   const [acceptedTerms, setAcceptedTerms]     = useState(false)
   const [remember, setRemember]               = useState(true)
   const [socialMsg, setSocialMsg]             = useState('')
+  const [forgotEmail, setForgotEmail]         = useState('')
+  const [forgotCode, setForgotCode]           = useState('')
+  const [newPassword, setNewPassword]         = useState('')
+  const [newPasswordConfirm, setNewPasswordConfirm] = useState('')
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault(); setError(''); setLoading(true)
@@ -154,6 +158,29 @@ export function Login() {
       await resendCode(email)
       setError('Novo código enviado para o seu e-mail.')
     } catch { setError('Não foi possível reenviar o código.') }
+  }
+
+  async function handleForgotSend(e: React.FormEvent) {
+    e.preventDefault(); setError(''); setLoading(true)
+    try {
+      await sendPasswordReset(forgotEmail)
+      setMode('forgot-confirm')
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Erro ao enviar código')
+    } finally { setLoading(false) }
+  }
+
+  async function handleForgotConfirm(e: React.FormEvent) {
+    e.preventDefault(); setError('')
+    if (newPassword !== newPasswordConfirm) { setError('As senhas não coincidem'); return }
+    setLoading(true)
+    try {
+      await confirmPasswordReset(forgotEmail, forgotCode, newPassword)
+      setError('Senha redefinida com sucesso! Faça login com a nova senha.')
+      setMode('login')
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Código inválido ou expirado')
+    } finally { setLoading(false) }
   }
 
   async function handleSocial() {
@@ -281,7 +308,7 @@ export function Login() {
         <div className="w-full max-w-[392px]">
 
           {/* Title */}
-          {mode !== 'confirm' && (
+          {mode !== 'confirm' && mode !== 'forgot' && mode !== 'forgot-confirm' && (
             <div className="mb-6">
               <h1 className="font-sans text-[27px] font-extrabold text-[#1A1626]">
                 {mode === 'login' ? 'Bem-vindo de volta' : 'Crie sua conta'}
@@ -294,8 +321,109 @@ export function Login() {
             </div>
           )}
 
+          {/* ── Forgot password ── */}
+          {mode === 'forgot' && (
+            <div className="space-y-5">
+              <div className="space-y-1 mb-6">
+                <h1 className="font-sans text-[27px] font-extrabold text-[#1A1626]">Recuperar senha</h1>
+                <p className="text-[14.5px] text-[#6B6780]">Informe seu e-mail e enviaremos um código de verificação.</p>
+              </div>
+              <form onSubmit={handleForgotSend} className="space-y-[17px]">
+                <div>
+                  <label className="mb-2 block text-[11.5px] font-bold uppercase tracking-wider text-[#6B6780]">E-mail</label>
+                  <InputShell icon={Mail}>
+                    <input
+                      type="email" value={forgotEmail}
+                      onChange={e => setForgotEmail(e.target.value)}
+                      required autoFocus placeholder="voce@email.com"
+                      className="cinp"
+                    />
+                  </InputShell>
+                </div>
+                <button
+                  type="submit" disabled={loading}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl py-3.5 font-sans text-[15px] font-bold text-white transition hover:-translate-y-px disabled:opacity-40 bg-[linear-gradient(135deg,#3B39E8,#2D2BC5)] shadow-[0_10px_24px_-8px_rgba(59,57,232,.5)]"
+                >
+                  {loading
+                    ? <><Loader2 className="h-[18px] w-[18px] animate-spin" /> Enviando…</>
+                    : 'Enviar código de verificação'}
+                </button>
+                <button type="button" onClick={() => switchMode('login')} className="w-full text-sm font-semibold text-[#6B6780] hover:text-primary hover:underline">
+                  Voltar ao login
+                </button>
+              </form>
+            </div>
+          )}
+
+          {/* ── Forgot confirm ── */}
+          {mode === 'forgot-confirm' && (
+            <div className="space-y-5">
+              <div className="text-center space-y-1 mb-4">
+                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+                  <Mail className="h-6 w-6 text-primary" />
+                </div>
+                <h2 className="font-sans text-xl font-extrabold text-[#1A1626]">Verifique seu e-mail</h2>
+                <p className="text-sm text-[#6B6780]">
+                  Enviamos um código para <strong className="text-[#1A1626]">{forgotEmail}</strong>
+                </p>
+              </div>
+              <form onSubmit={handleForgotConfirm} className="space-y-[17px]">
+                <div>
+                  <label className="mb-2 block text-[11.5px] font-bold uppercase tracking-wider text-[#6B6780]">Código de verificação</label>
+                  <input
+                    type="text" value={forgotCode}
+                    onChange={e => setForgotCode(e.target.value)}
+                    required autoFocus inputMode="numeric" maxLength={6}
+                    className="cinp text-center text-xl tracking-[0.5em] font-bold !pl-4"
+                    placeholder="000000"
+                  />
+                </div>
+                <div>
+                  <label className="mb-2 block text-[11.5px] font-bold uppercase tracking-wider text-[#6B6780]">Nova senha (mín. 8 caracteres)</label>
+                  <InputShell icon={Lock}>
+                    <input
+                      type={showPass ? 'text' : 'password'} value={newPassword}
+                      onChange={e => setNewPassword(e.target.value)}
+                      required minLength={8} placeholder="••••••••"
+                      className="cinp"
+                    />
+                    <button type="button" onClick={() => setShowPass(v => !v)} className="ceye"
+                      aria-label={showPass ? 'Ocultar senha' : 'Mostrar senha'}>
+                      {showPass ? <EyeOff className="h-[18px] w-[18px]" /> : <Eye className="h-[18px] w-[18px]" />}
+                    </button>
+                  </InputShell>
+                </div>
+                <div>
+                  <label className="mb-2 block text-[11.5px] font-bold uppercase tracking-wider text-[#6B6780]">Confirmar nova senha</label>
+                  <InputShell icon={LockKeyhole}>
+                    <input
+                      type={showConfirmPass ? 'text' : 'password'} value={newPasswordConfirm}
+                      onChange={e => setNewPasswordConfirm(e.target.value)}
+                      required minLength={8} placeholder="••••••••"
+                      className="cinp"
+                    />
+                    <button type="button" onClick={() => setShowConfirmPass(v => !v)} className="ceye">
+                      {showConfirmPass ? <EyeOff className="h-[18px] w-[18px]" /> : <Eye className="h-[18px] w-[18px]" />}
+                    </button>
+                  </InputShell>
+                </div>
+                <button
+                  type="submit" disabled={loading}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl py-3.5 font-sans text-[15px] font-bold text-white transition hover:-translate-y-px disabled:opacity-40 bg-[linear-gradient(135deg,#3B39E8,#2D2BC5)] shadow-[0_10px_24px_-8px_rgba(59,57,232,.5)]"
+                >
+                  {loading
+                    ? <><Loader2 className="h-[18px] w-[18px] animate-spin" /> Redefinindo…</>
+                    : 'Redefinir senha'}
+                </button>
+                <button type="button" onClick={() => switchMode('forgot')} className="w-full text-sm font-semibold text-[#6B6780] hover:text-primary hover:underline">
+                  Reenviar código
+                </button>
+              </form>
+            </div>
+          )}
+
           {/* Tab toggle */}
-          {mode !== 'confirm' && (
+          {mode !== 'confirm' && mode !== 'forgot' && mode !== 'forgot-confirm' && (
             <div className="flex gap-[3px] rounded-xl border border-[#E8E8FF] bg-[#F4F3FB] p-1 mb-6">
               {(['login', 'register'] as const).map((m) => (
                 <button
@@ -316,7 +444,7 @@ export function Login() {
           )}
 
           {/* Google SSO */}
-          {mode !== 'confirm' && (
+          {mode !== 'confirm' && mode !== 'forgot' && mode !== 'forgot-confirm' && (
             <button
               type="button"
               onClick={handleSocial}
@@ -330,7 +458,7 @@ export function Login() {
           )}
 
           {/* Divider */}
-          {mode !== 'confirm' && (
+          {mode !== 'confirm' && mode !== 'forgot' && mode !== 'forgot-confirm' && (
             <div className="my-5 flex items-center gap-3 text-[11px] font-bold tracking-widest text-[#9B98AD] uppercase">
               <div className="flex-1 h-px bg-[#EBE9F5]" />
               ou com e-mail
@@ -374,7 +502,7 @@ export function Login() {
               <div>
                 <div className="mb-2 flex items-center justify-between">
                   <label className="text-[11.5px] font-bold uppercase tracking-wider text-[#6B6780]">Senha</label>
-                  <button type="button" className="text-[12.5px] font-semibold text-primary hover:underline">
+                  <button type="button" onClick={() => { setForgotEmail(email); switchMode('forgot') }} className="text-[12.5px] font-semibold text-primary hover:underline">
                     Esqueci a senha
                   </button>
                 </div>
@@ -560,7 +688,7 @@ export function Login() {
           )}
 
           {/* Security + legal */}
-          {mode !== 'confirm' && (
+          {mode !== 'confirm' && mode !== 'forgot' && mode !== 'forgot-confirm' && (
             <>
               <div className="mt-5 flex items-center justify-center gap-[7px] text-xs text-[#9B98AD] font-medium">
                 <ShieldCheck className="h-3.5 w-3.5" />

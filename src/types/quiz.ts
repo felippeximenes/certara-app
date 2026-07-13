@@ -51,6 +51,7 @@ export interface QuizHistoryItem {
   total: number
   pct: number
   difficulty: string
+  certification?: string
   domains: Record<string, { correct: number; total: number }>
 }
 

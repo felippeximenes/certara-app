@@ -62,6 +62,27 @@ export function Quiz() {
     fetchQuestion(0)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Ref keeps handleAnswer/handleNext fresh inside the keydown listener
+  const actionsRef = useRef({ handleAnswer: () => {}, handleNext: () => {} } as { handleAnswer: () => void; handleNext: () => void })
+
+  // A-D / 1-4 to select, Enter to confirm or advance
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
+      const key = e.key.toUpperCase()
+      if (phase === 'selecting') {
+        const byLetter = ['A', 'B', 'C', 'D'].indexOf(key)
+        const byNumber = ['1', '2', '3', '4'].indexOf(key)
+        const idx = byLetter !== -1 ? byLetter : byNumber
+        if (idx !== -1 && question?.options[idx] !== undefined) { setSelected(idx); return }
+        if (e.key === 'Enter' && selected !== null) { actionsRef.current.handleAnswer(); return }
+      }
+      if (phase === 'feedback' && e.key === 'Enter') actionsRef.current.handleNext()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [phase, selected, question])
+
   async function handleAnswer() {
     if (selected === null || !question) return
     setPhase('evaluating')
@@ -89,6 +110,8 @@ export function Quiz() {
       fetchQuestion(next)
     }
   }
+
+  actionsRef.current = { handleAnswer, handleNext }
 
   const correctIndex = question ? getCorrectIndex(question.answer) : -1
   const isAnswered = phase === 'feedback'

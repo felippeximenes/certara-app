@@ -120,6 +120,7 @@ def lambda_handler(event, _context):
         if not (0 <= score <= total <= 100 and total > 0):
             return _cors({"error": "Invalid score or total"}, 400)
         difficulty = str(body.get("difficulty", ""))
+        certification = str(body.get("certification", "")) or None
         answers = body.get("answers", [])
         if not isinstance(answers, list) or len(answers) > 100:
             return _cors({"error": "Invalid answers"}, 400)
@@ -141,7 +142,7 @@ def lambda_handler(event, _context):
             + "_" + str(uuid.uuid4())[:8]
         )
 
-        table.put_item(Item={
+        item: dict = {
             "userId": user_id,
             "quizId": quiz_id,
             "date": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -150,7 +151,10 @@ def lambda_handler(event, _context):
             "pct": round(score / total * 100) if total else 0,
             "difficulty": difficulty,
             "domains": domains,
-        })
+        }
+        if certification:
+            item["certification"] = certification
+        table.put_item(Item=item)
 
         # Mark trial as consumed for free users (idempotent put — safe to call twice)
         if not _is_premium(user_id):
