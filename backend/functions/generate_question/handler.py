@@ -1,7 +1,8 @@
 ﻿import json
 import os
 import re
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
+from decimal import Decimal
 
 import boto3
 from botocore.exceptions import ClientError
@@ -12,6 +13,7 @@ _FP_RE = re.compile(r'^[A-Za-z0-9_\-]{8,128}$')
 BEDROCK_REGION = os.environ.get("BEDROCK_REGION", "us-east-1")
 MODEL_ID = os.environ.get("BEDROCK_MODEL_ID", "amazon.nova-pro-v1:0")
 SUBSCRIPTIONS_TABLE = os.environ.get("SUBSCRIPTIONS_TABLE", "")
+TRIAL_DAILY_LIMIT = int(os.environ.get("TRIAL_DAILY_LIMIT", "10"))  # 1 quiz = 10 questions/day
 
 # Partition key used for global device fingerprint records
 _FP_USER = "TRIAL_DEVICE"
@@ -120,17 +122,22 @@ def _source_ip(event: dict) -> str:
         return "unknown"
 
 
+def _next_midnight_utc() -> int:
+    now = datetime.now(timezone.utc)
+    midnight = (now + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+    return int(midnight.timestamp())
+
+
 def _check_trial(event: dict, fingerprint: str | None) -> dict | None:
     """
-    Returns a 4xx response if the user cannot access a trial quiz, else None.
+    Returns a 429 response if the free daily limit is reached, else None.
+    Atomically increments the daily counter when allowed.
 
     Logic:
       1. Premium users → always allowed.
-      2. Free users with TRIAL#USED already set → trial_exhausted.
-      3. Free users whose device fingerprint was already used → device_trial_exhausted.
-      4. Otherwise → allowed (trial not yet consumed).
-
-    IP is logged for monitoring; no hard-block on IP alone.
+      2. Daily counter for account >= TRIAL_DAILY_LIMIT → blocked.
+      3. Daily counter for device fingerprint >= TRIAL_DAILY_LIMIT → blocked.
+      4. Otherwise → allowed, counter incremented, TTL set to next UTC midnight.
     """
     if not _sub_table:
         return None
@@ -138,8 +145,9 @@ def _check_trial(event: dict, fingerprint: str | None) -> dict | None:
         claims = event["requestContext"]["authorizer"]["jwt"]["claims"]
         user_id: str = claims["sub"]
         source_ip = _source_ip(event)
+        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
-        # ── 1. Premium check ────────────────────────────────────────────────
+        # ── 1. Premium check ─────────────────────────────────────────────────
         sub_resp = _sub_table.get_item(Key={"userId": user_id, "sortKey": "SUBSCRIPTION"})
         sub = sub_resp.get("Item") or {}
         now_ts = datetime.now(timezone.utc).timestamp()
@@ -150,33 +158,48 @@ def _check_trial(event: dict, fingerprint: str | None) -> dict | None:
         if is_premium:
             return None
 
-        # ── 2. Trial already used by this account ────────────────────────────
-        trial_resp = _sub_table.get_item(Key={"userId": user_id, "sortKey": "TRIAL#USED"})
-        if trial_resp.get("Item"):
-            print(f"[trial] BLOCKED account={user_id} ip={source_ip} reason=trial_exhausted")
+        # ── 2. Account daily limit ───────────────────────────────────────────
+        trial_resp = _sub_table.get_item(Key={"userId": user_id, "sortKey": "TRIAL#DAILY"})
+        trial = trial_resp.get("Item") or {}
+        if trial.get("date") == today and int(trial.get("count", 0)) >= TRIAL_DAILY_LIMIT:
+            print(f"[trial] BLOCKED account={user_id} ip={source_ip} date={today} reason=daily_limit")
             return make_response(429, {
                 "error": "trial_exhausted",
-                "message": "Seu teste gratuito já foi utilizado. Assine o Premium para continuar.",
+                "message": "Você atingiu o limite gratuito de hoje. Volte amanhã ou assine o Premium.",
             })
 
-        # ── 3. Device fingerprint already used (different or same account) ───
+        # ── 3. Device fingerprint daily limit ────────────────────────────────
         if fingerprint:
             fp_resp = _sub_table.get_item(
-                Key={"userId": _FP_USER, "sortKey": f"FP#{fingerprint}"}
+                Key={"userId": _FP_USER, "sortKey": f"FP#{fingerprint}#{today}"}
             )
-            if fp_resp.get("Item"):
-                print(
-                    f"[trial] BLOCKED fingerprint={fingerprint[:12]}… "
-                    f"account={user_id} ip={source_ip} reason=device_trial_exhausted"
-                )
+            fp = fp_resp.get("Item") or {}
+            if int(fp.get("count", 0)) >= TRIAL_DAILY_LIMIT:
+                print(f"[trial] BLOCKED fingerprint={fingerprint[:12]}… account={user_id} ip={source_ip} date={today}")
                 return make_response(429, {
                     "error": "trial_exhausted",
-                    "message": "Seu teste gratuito já foi utilizado neste dispositivo. "
-                               "Assine o Premium para continuar.",
+                    "message": "Você atingiu o limite gratuito de hoje neste dispositivo. "
+                               "Volte amanhã ou assine o Premium.",
                 })
 
-        # ── 4. Log IP for monitoring (soft signal, not a block) ──────────────
-        print(f"[trial] ALLOWED account={user_id} ip={source_ip} fp={str(fingerprint)[:12] if fingerprint else 'none'}")
+        # ── 4. Consume one question: increment counters with TTL ─────────────
+        ttl = Decimal(_next_midnight_utc())
+        _sub_table.update_item(
+            Key={"userId": user_id, "sortKey": "TRIAL#DAILY"},
+            UpdateExpression="SET #d = :date, #ttl = :ttl ADD #c :one",
+            ExpressionAttributeNames={"#d": "date", "#ttl": "ttl", "#c": "count"},
+            ExpressionAttributeValues={":date": today, ":ttl": ttl, ":one": Decimal(1)},
+        )
+        if fingerprint:
+            _sub_table.update_item(
+                Key={"userId": _FP_USER, "sortKey": f"FP#{fingerprint}#{today}"},
+                UpdateExpression="SET #d = :date, #ttl = :ttl ADD #c :one",
+                ExpressionAttributeNames={"#d": "date", "#ttl": "ttl", "#c": "count"},
+                ExpressionAttributeValues={":date": today, ":ttl": ttl, ":one": Decimal(1)},
+            )
+
+        count_after = int(trial.get("count", 0) if trial.get("date") == today else 0) + 1
+        print(f"[trial] ALLOWED account={user_id} ip={source_ip} date={today} count={count_after}/{TRIAL_DAILY_LIMIT}")
 
     except Exception as exc:
         # Non-fatal: don't block users if the check itself fails
@@ -185,13 +208,79 @@ def _check_trial(event: dict, fingerprint: str | None) -> dict | None:
     return None
 
 
-def build_prompt(domain_key: str, difficulty: str, cert_id: str, context: str = "") -> str:
+SEEN_Q_LIMIT = 30  # recent questions stored per user per certification
+
+
+def _get_seen_questions(user_id: str, cert_id: str) -> list[str]:
+    """Fetch the list of recently seen question previews for this user+cert."""
+    if not _sub_table or not user_id:
+        return []
+    try:
+        resp = _sub_table.get_item(
+            Key={"userId": user_id, "sortKey": f"SEEN_Q#{cert_id}"}
+        )
+        return list(resp.get("Item", {}).get("questions", []))
+    except Exception as exc:
+        print(f"[seen-q] fetch error: {exc}")
+        return []
+
+
+def _save_seen_question(user_id: str, cert_id: str, question_text: str) -> None:
+    """Append a new question preview to the user's seen list, keeping last SEEN_Q_LIMIT."""
+    if not _sub_table or not user_id:
+        return
+    preview = question_text[:120]
+    ttl = Decimal(int((datetime.now(timezone.utc) + timedelta(days=30)).timestamp()))
+    try:
+        # Append then trim to last SEEN_Q_LIMIT entries
+        _sub_table.update_item(
+            Key={"userId": user_id, "sortKey": f"SEEN_Q#{cert_id}"},
+            UpdateExpression=(
+                "SET questions = list_append(if_not_exists(questions, :empty), :new), "
+                "#ttl = :ttl"
+            ),
+            ExpressionAttributeNames={"#ttl": "ttl"},
+            ExpressionAttributeValues={
+                ":new": [preview],
+                ":empty": [],
+                ":ttl": ttl,
+            },
+        )
+        # Trim: if list grew too large, replace with last SEEN_Q_LIMIT items
+        check = _sub_table.get_item(
+            Key={"userId": user_id, "sortKey": f"SEEN_Q#{cert_id}"}
+        )
+        questions = list(check.get("Item", {}).get("questions", []))
+        if len(questions) > SEEN_Q_LIMIT:
+            _sub_table.update_item(
+                Key={"userId": user_id, "sortKey": f"SEEN_Q#{cert_id}"},
+                UpdateExpression="SET questions = :trimmed",
+                ExpressionAttributeValues={":trimmed": questions[-SEEN_Q_LIMIT:]},
+            )
+    except Exception as exc:
+        print(f"[seen-q] save error: {exc}")
+
+
+def build_prompt(
+    domain_key: str,
+    difficulty: str,
+    cert_id: str,
+    context: str = "",
+    seen_questions: list[str] | None = None,
+) -> str:
     domain_desc = CERT_DOMAINS[cert_id][domain_key]
     cert_name = CERT_NAMES[cert_id]
     context_block = (
         f"\n\n{context}\n\nBaseie a questão nos trechos acima sempre que relevante."
         if context else ""
     )
+    seen_block = ""
+    if seen_questions:
+        items = "\n".join(f"- {q}" for q in seen_questions[-20:])
+        seen_block = (
+            f"\n\nIMPORTANTE — NÃO repita tópicos ou conceitos similares "
+            f"às seguintes questões já vistas pelo usuário:\n{items}"
+        )
     return f"""Você é um instrutor especialista em certificações AWS escrevendo questões para o exame {cert_name}.
 
 Gere UMA questão de múltipla escolha com as seguintes especificações:
@@ -205,7 +294,7 @@ Regras:
 4. Forneça exatamente 4 alternativas rotuladas A, B, C, D
 5. Apenas uma alternativa está correta
 6. As alternativas erradas devem ser plausíveis, mas claramente incorretas para um candidato bem preparado
-7. A explicação deve reforçar o conceito AWS sendo avaliado, também em português
+7. A explicação deve reforçar o conceito AWS sendo avaliado, também em português{seen_block}
 
 Responda APENAS com um objeto JSON — sem markdown, sem texto extra:
 {{
@@ -216,6 +305,13 @@ Responda APENAS com um objeto JSON — sem markdown, sem texto extra:
   "domain": "{domain_key}",
   "difficulty": "{difficulty}"
 }}{context_block}"""
+
+
+def _get_user_id(event: dict) -> str | None:
+    try:
+        return event["requestContext"]["authorizer"]["jwt"]["claims"]["sub"]
+    except (KeyError, TypeError):
+        return None
 
 
 def lambda_handler(event: dict, _context: object) -> dict:
@@ -246,6 +342,15 @@ def lambda_handler(event: dict, _context: object) -> dict:
                 "error": "Invalid difficulty. Must be one of: easy, medium, hard"
             })
 
+        # ── Deduplication: combine cross-session (DB) + within-session (client) ──
+        user_id = _get_user_id(event)
+        db_seen = _get_seen_questions(user_id, cert_id) if user_id else []
+        client_seen: list[str] = [
+            str(q)[:120] for q in body.get("recentQuestions", [])
+            if isinstance(q, str) and q.strip()
+        ][:10]
+        seen_questions = db_seen + [q for q in client_seen if q not in db_seen]
+
         context = get_context(domain, difficulty, cert_id)
         bedrock_response = bedrock.converse(
             modelId=MODEL_ID,
@@ -253,8 +358,8 @@ def lambda_handler(event: dict, _context: object) -> dict:
                 "Você é um especialista em certificações AWS. "
                 "Responda sempre com JSON válido apenas — sem markdown, sem comentários."
             )}],
-            messages=[{"role": "user", "content": [{"text": build_prompt(domain, difficulty, cert_id, context)}]}],
-            inferenceConfig={"maxTokens": 1024, "temperature": 0.7},
+            messages=[{"role": "user", "content": [{"text": build_prompt(domain, difficulty, cert_id, context, seen_questions)}]}],
+            inferenceConfig={"maxTokens": 700, "temperature": 0.7},
         )
 
         raw_text: str = bedrock_response["output"]["message"]["content"][0]["text"]
@@ -265,6 +370,10 @@ def lambda_handler(event: dict, _context: object) -> dict:
                 clean = clean[4:]
             clean = clean.rsplit("```", 1)[0].strip()
         question_data: dict = json.loads(clean)
+
+        # ── Persist new question to seen list ────────────────────────────────
+        if user_id and question_data.get("question"):
+            _save_seen_question(user_id, cert_id, question_data["question"])
 
         return make_response(200, question_data)
 

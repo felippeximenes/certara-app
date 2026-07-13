@@ -1,4 +1,4 @@
-﻿import json
+import json
 import os
 from datetime import datetime, timezone
 from decimal import Decimal
@@ -6,6 +6,7 @@ from decimal import Decimal
 import boto3
 
 TABLE_NAME = os.environ["SUBSCRIPTIONS_TABLE"]
+TRIAL_DAILY_LIMIT = int(os.environ.get("TRIAL_DAILY_LIMIT", "10"))
 
 dynamodb = boto3.resource("dynamodb")
 table = dynamodb.Table(TABLE_NAME)
@@ -37,6 +38,7 @@ def _cors(body: dict, status: int = 200) -> dict:
 def lambda_handler(event: dict, _context: object) -> dict:
     try:
         user_id = _user_id(event)
+        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
         sub_resp = table.get_item(Key={"userId": user_id, "sortKey": "SUBSCRIPTION"})
         sub = sub_resp.get("Item", {})
@@ -47,25 +49,28 @@ def lambda_handler(event: dict, _context: object) -> dict:
             and int(sub.get("currentPeriodEnd", 0)) > now_ts
         )
 
-        # Check whether the free trial has been consumed
-        trial_resp = table.get_item(Key={"userId": user_id, "sortKey": "TRIAL#USED"})
-        trial_used = bool(trial_resp.get("Item"))
-
         if is_premium:
             return _cors({
                 "plan": "premium",
                 "status": sub.get("status"),
                 "currentPeriodEnd": sub.get("currentPeriodEnd"),
                 "stripeSubscriptionId": sub.get("stripeSubscriptionId"),
-                "trialUsed": True,        # premium always treated as trial consumed
+                "trialUsed": True,
                 "quizzesRemaining": None,
             })
 
+        # Check daily trial usage
+        trial_resp = table.get_item(Key={"userId": user_id, "sortKey": "TRIAL#DAILY"})
+        trial = trial_resp.get("Item") or {}
+        used_today = int(trial.get("count", 0)) if trial.get("date") == today else 0
+        remaining = max(0, TRIAL_DAILY_LIMIT - used_today)
+
         return _cors({
             "plan": "free",
-            "trialUsed": trial_used,
-            "quizzesRemaining": 0 if trial_used else 1,
-            "trialLimit": 1,
+            "trialUsed": remaining == 0,
+            "questionsUsedToday": used_today,
+            "questionsRemainingToday": remaining,
+            "trialLimit": TRIAL_DAILY_LIMIT,
         })
 
     except Exception as exc:

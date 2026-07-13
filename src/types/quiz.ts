@@ -58,6 +58,8 @@ export interface SubscriptionStatus {
   plan: 'free' | 'premium'
   trialUsed: boolean
   quizzesRemaining: number | null
+  questionsUsedToday?: number
+  questionsRemainingToday?: number
   trialLimit?: number
   status?: string
   currentPeriodEnd?: number

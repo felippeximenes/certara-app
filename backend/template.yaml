@@ -17,6 +17,7 @@ Globals:
         HISTORY_TABLE: !Ref QuizHistoryTable
         SUBSCRIPTIONS_TABLE: !Ref QuizSubscriptionsTable
         FRONTEND_URL: !Ref FrontendUrl
+        TRIAL_DAILY_LIMIT: !Ref TrialDailyLimit
 
 # ── Parameters ─────────────────────────────────────────────────────────────
 Parameters:
@@ -26,7 +27,7 @@ Parameters:
 
   BedrockModelId:
     Type: String
-    Default: amazon.nova-pro-v1:0
+    Default: amazon.nova-lite-v1:0
 
   QdrantUrl:
     Type: String
@@ -59,10 +60,57 @@ Parameters:
     Default: "https://quizzapp-six-cyan.vercel.app"
     Description: Frontend base URL for Stripe redirect URLs.
 
+  GoogleClientId:
+    Type: String
+    Default: ""
+    Description: Google OAuth 2.0 Client ID (from Google Cloud Console).
+
+  GoogleClientSecret:
+    Type: String
+    Default: ""
+    NoEcho: true
+    Description: Google OAuth 2.0 Client Secret (from Google Cloud Console).
+
+  CognitoDomainPrefix:
+    Type: String
+    Default: "certara-auth"
+    Description: Unique prefix for the Cognito Hosted UI domain (must be globally unique).
+
+  TrialDailyLimit:
+    Type: String
+    Default: "10"
+    Description: Number of free questions allowed per day (10 = 1 full quiz).
+
+# ── Conditions ─────────────────────────────────────────────────────────────
+Conditions:
+  HasGoogleCredentials: !Not [!Equals [!Ref GoogleClientId, ""]]
+
 # ── Resources ──────────────────────────────────────────────────────────────
 Resources:
 
   # ── Auth ──────────────────────────────────────────────────────────────────
+  CognitoUserPoolDomain:
+    Type: AWS::Cognito::UserPoolDomain
+    Properties:
+      Domain: !Ref CognitoDomainPrefix
+      UserPoolId: !Ref UserPool
+
+  GoogleIdentityProvider:
+    Type: AWS::Cognito::UserPoolIdentityProvider
+    Condition: HasGoogleCredentials
+    Properties:
+      UserPoolId: !Ref UserPool
+      ProviderName: Google
+      ProviderType: Google
+      ProviderDetails:
+        client_id: !Ref GoogleClientId
+        client_secret: !Ref GoogleClientSecret
+        authorize_scopes: "email openid profile"
+      AttributeMapping:
+        email: email
+        name: name
+        picture: picture
+
   UserPool:
     Type: AWS::Cognito::UserPool
     Properties:
@@ -88,6 +136,7 @@ Resources:
 
   UserPoolClient:
     Type: AWS::Cognito::UserPoolClient
+    DependsOn: CognitoUserPoolDomain
     Properties:
       ClientName: quizzapp-web
       UserPoolId: !Ref UserPool
@@ -96,6 +145,24 @@ Resources:
         - ALLOW_USER_SRP_AUTH
         - ALLOW_REFRESH_TOKEN_AUTH
       PreventUserExistenceErrors: ENABLED
+      AllowedOAuthFlows:
+        - code
+      AllowedOAuthScopes:
+        - email
+        - openid
+        - profile
+      AllowedOAuthFlowsUserPoolClient: true
+      CallbackURLs:
+        - http://localhost:3000
+        - !Ref FrontendUrl
+      LogoutURLs:
+        - http://localhost:3000
+        - !Ref FrontendUrl
+      SupportedIdentityProviders: !If
+        - HasGoogleCredentials
+        - - COGNITO
+          - Google
+        - - COGNITO
 
   # ── API ───────────────────────────────────────────────────────────────────
   QuizApi:
@@ -158,6 +225,9 @@ Resources:
           KeyType: HASH
         - AttributeName: sortKey
           KeyType: RANGE
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
 
   # ── IAM Policies ──────────────────────────────────────────────────────────
   DynamoDBPolicy:
@@ -449,3 +519,7 @@ Outputs:
   StripeWebhookUrl:
     Description: Register this URL as a Stripe webhook endpoint in your Stripe Dashboard
     Value: !Sub https://${QuizApi}.execute-api.${AWS::Region}.amazonaws.com/prod/stripe-webhook
+
+  CognitoOAuthDomain:
+    Description: Cognito Hosted UI domain — set as VITE_COGNITO_DOMAIN in .env.local
+    Value: !Sub ${CognitoDomainPrefix}.auth.${AWS::Region}.amazoncognito.com
