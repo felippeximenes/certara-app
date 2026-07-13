@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import {
   LogOut, Zap, Star, Trophy, Crown, Flame, Target, Layers, BookOpen,
   LayoutDashboard, BarChart3, Sparkles, Play, Menu, Check, Brain,
-  TrendingUp, ChevronRight, ChevronDown,
+  TrendingUp, ChevronRight, ChevronDown, Settings,
 } from 'lucide-react'
 import { Logo } from '../components/Logo'
 import { Onboarding } from '../components/Onboarding'
@@ -260,6 +260,13 @@ function Sidebar({ open, onClose, name, isPremium, onLogout }: SidebarProps) {
             <p className="text-xs font-semibold text-foreground truncate">{name}</p>
             <p className="text-[10px] text-muted-foreground">{isPremium ? 'Plano Premium' : 'Plano Gratuito'}</p>
           </div>
+          <button
+            onClick={() => { navigate('/conta'); onClose() }}
+            className="text-muted-foreground hover:text-foreground transition-colors p-1"
+            title="Configurações da conta"
+          >
+            <Settings className="h-3.5 w-3.5" />
+          </button>
           <button
             onClick={onLogout}
             className="text-muted-foreground hover:text-danger transition-colors p-1"

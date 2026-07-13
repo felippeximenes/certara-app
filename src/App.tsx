@@ -9,6 +9,7 @@ import { Subscription } from './pages/Subscription'
 import { PaymentSuccess } from './pages/PaymentSuccess'
 import { Terms } from './pages/Terms'
 import { Privacy } from './pages/Privacy'
+import { Account } from './pages/Account'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { CookieBanner } from './components/CookieBanner'
 import { useAuthStore } from './store/authStore'
@@ -33,6 +34,7 @@ const TITLE_MAP: Record<string, string> = {
   '/plano-de-estudos': 'Plano de Estudos — Certara',
   '/termos': 'Termos de Uso — Certara',
   '/privacidade': 'Política de Privacidade — Certara',
+  '/conta': 'Conta — Certara',
 }
 
 function PageFallback() {
@@ -99,6 +101,7 @@ export function App() {
           <Route path="/simulado" element={<ProtectedRoute><Simulation /></ProtectedRoute>} />
           <Route path="/flashcards" element={<ProtectedRoute><Flashcards /></ProtectedRoute>} />
           <Route path="/plano-de-estudos" element={<ProtectedRoute><StudyPlan /></ProtectedRoute>} />
+          <Route path="/conta" element={<ProtectedRoute><Account /></ProtectedRoute>} />
           <Route path="*" element={<Navigate to="/app" replace />} />
         </Routes>
       </Suspense>

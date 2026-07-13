@@ -260,6 +260,25 @@ Resources:
               - dynamodb:UpdateItem
             Resource: !GetAtt QuizSubscriptionsTable.Arn
 
+  DeleteAccountPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: Allow delete-account Lambda to erase all user data and remove Cognito user
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - dynamodb:Query
+              - dynamodb:DeleteItem
+            Resource:
+              - !GetAtt QuizHistoryTable.Arn
+              - !GetAtt QuizSubscriptionsTable.Arn
+          - Effect: Allow
+            Action:
+              - cognito-idp:AdminDeleteUser
+            Resource: !GetAtt UserPool.Arn
+
   BedrockInvokePolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
@@ -375,6 +394,27 @@ Resources:
             ApiId: !Ref QuizApi
             Path: /history
             Method: get
+
+  # 4a — delete account (LGPD)
+  DeleteAccountFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: quizzapp-delete-account
+      Handler: handler.lambda_handler
+      CodeUri: functions/delete_account/
+      Description: Deletes all user data from DynamoDB and removes the Cognito user (LGPD)
+      Policies:
+        - !Ref DeleteAccountPolicy
+      Environment:
+        Variables:
+          USER_POOL_ID: !Ref UserPool
+      Events:
+        DeleteAccount:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref QuizApi
+            Path: /account
+            Method: delete
 
   # 4b — delete history (single item or all)
   DeleteHistoryFunction:

@@ -177,3 +177,10 @@ export async function createCheckoutSession(): Promise<string> {
   const data = await res.json() as { checkoutUrl: string }
   return data.checkoutUrl
 }
+
+export async function deleteAccount(): Promise<void> {
+  await apiFetch(`${API_URL}/account`, {
+    method: 'DELETE',
+    headers: await authHeaders(),
+  })
+}
