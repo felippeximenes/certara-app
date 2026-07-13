@@ -187,6 +187,7 @@ Resources:
         AllowMethods:
           - GET
           - POST
+          - DELETE
           - OPTIONS
         AllowHeaders:
           - Content-Type
@@ -242,6 +243,7 @@ Resources:
               - dynamodb:PutItem
               - dynamodb:Query
               - dynamodb:GetItem
+              - dynamodb:DeleteItem
             Resource: !GetAtt QuizHistoryTable.Arn
 
   SubscriptionPolicy:
@@ -373,6 +375,30 @@ Resources:
             ApiId: !Ref QuizApi
             Path: /history
             Method: get
+
+  # 4b — delete history (single item or all)
+  DeleteHistoryFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: quizzapp-delete-history
+      Handler: handler.lambda_handler
+      CodeUri: functions/delete_history/
+      Description: Deletes one or all quiz history entries for the authenticated user
+      Policies:
+        - !Ref DynamoDBPolicy
+      Events:
+        DeleteOne:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref QuizApi
+            Path: /history/{quizId}
+            Method: delete
+        DeleteAll:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref QuizApi
+            Path: /history
+            Method: delete
 
   # 5 — generate summary
   GenerateSummaryFunction:

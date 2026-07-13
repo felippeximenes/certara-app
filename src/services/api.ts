@@ -130,6 +130,20 @@ export async function listHistory(): Promise<QuizHistoryItem[]> {
   return data.items
 }
 
+export async function deleteHistoryItem(quizId: string): Promise<void> {
+  await apiFetch(`${API_URL}/history/${encodeURIComponent(quizId)}`, {
+    method: 'DELETE',
+    headers: await authHeaders(),
+  })
+}
+
+export async function clearAllHistory(): Promise<void> {
+  await apiFetch(`${API_URL}/history`, {
+    method: 'DELETE',
+    headers: await authHeaders(),
+  })
+}
+
 export async function getSubscription(): Promise<SubscriptionStatus> {
   const res = await apiFetch(`${API_URL}/subscription`, {
     method: 'GET',

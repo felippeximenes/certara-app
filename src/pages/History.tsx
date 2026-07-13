@@ -1,12 +1,12 @@
 ﻿import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Trash2, AlertTriangle } from 'lucide-react'
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, ReferenceLine,
   BarChart, Bar, Cell, LabelList,
 } from 'recharts'
-import { listHistory } from '../services/api'
+import { listHistory, deleteHistoryItem, clearAllHistory } from '../services/api'
 import { cn } from '@/lib/utils'
 import type { QuizHistoryItem } from '../types/quiz'
 
@@ -73,6 +73,10 @@ export function History() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains('dark'))
+  const [confirmId, setConfirmId] = useState<string | null>(null)
+  const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set())
+  const [clearConfirm, setClearConfirm] = useState(false)
+  const [clearing, setClearing] = useState(false)
 
   useEffect(() => {
     listHistory()
@@ -137,8 +141,40 @@ export function History() {
   const chartGrid = isDark ? '#312E81' : '#C7D2FE'
   const chartTick = isDark ? '#9CA3AF' : '#6B7280'
 
+  async function handleDelete(quizId: string) {
+    if (confirmId !== quizId) {
+      setConfirmId(quizId)
+      return
+    }
+    setConfirmId(null)
+    setDeletingIds((prev) => new Set(prev).add(quizId))
+    const snapshot = items
+    setItems((prev) => prev.filter((i) => i.quizId !== quizId))
+    try {
+      await deleteHistoryItem(quizId)
+    } catch {
+      setItems(snapshot)
+    } finally {
+      setDeletingIds((prev) => { const next = new Set(prev); next.delete(quizId); return next })
+    }
+  }
+
+  async function handleClearAll() {
+    setClearConfirm(false)
+    setClearing(true)
+    const snapshot = items
+    setItems([])
+    try {
+      await clearAllHistory()
+    } catch {
+      setItems(snapshot)
+    } finally {
+      setClearing(false)
+    }
+  }
+
   return (
-    <div className="flex min-h-svh flex-col bg-background">
+    <div className="flex min-h-svh flex-col bg-background" onClick={() => setConfirmId(null)}>
       <header className="sticky top-0 z-10 border-b border-border bg-card/80 backdrop-blur-sm">
         <div className="mx-auto flex max-w-2xl items-center justify-between px-4 py-3">
           <button
@@ -152,11 +188,43 @@ export function History() {
       </header>
 
       <main className="mx-auto w-full max-w-2xl flex-1 space-y-6 px-4 py-8">
-        <div className="space-y-1">
-          <h2 className="font-sans text-2xl font-bold text-foreground">
-            Seu <span className="text-primary">Histórico</span>
-          </h2>
-          <p className="text-sm text-muted-foreground">Acompanhe sua evolução nos quizzes</p>
+        <div className="flex items-start justify-between gap-4">
+          <div className="space-y-1">
+            <h2 className="font-sans text-2xl font-bold text-foreground">
+              Seu <span className="text-primary">Histórico</span>
+            </h2>
+            <p className="text-sm text-muted-foreground">Acompanhe sua evolução nos quizzes</p>
+          </div>
+          {items.length > 0 && (
+            <div className="flex-shrink-0 pt-1">
+              {clearConfirm ? (
+                <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                  <span className="text-xs text-muted-foreground">Apagar tudo?</span>
+                  <button
+                    onClick={handleClearAll}
+                    disabled={clearing}
+                    className="rounded-lg bg-danger px-3 py-1.5 text-xs font-semibold text-white hover:bg-danger/90 transition-colors disabled:opacity-60"
+                  >
+                    Confirmar
+                  </button>
+                  <button
+                    onClick={() => setClearConfirm(false)}
+                    className="rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={(e) => { e.stopPropagation(); setClearConfirm(true) }}
+                  className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground hover:border-danger/40 hover:text-danger transition-colors"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  Limpar tudo
+                </button>
+              )}
+            </div>
+          )}
         </div>
 
         {loading && (
@@ -274,44 +342,82 @@ export function History() {
 
             {/* Quiz list */}
             <ul className="space-y-3">
-              {items.map((item) => (
-                <li key={item.quizId} className="rounded-xl border border-border bg-card p-4 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-muted-foreground">{formatDate(item.date)}</span>
-                    <span className="rounded-full border border-border px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
-                      {item.difficulty}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    <span className={cn('font-sans text-lg font-bold tabular-nums', pctColor(item.pct))}>
-                      {item.score}/{item.total}
-                    </span>
-                    <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
-                      <div
-                        className={cn('h-full rounded-full transition-all duration-500', pctBarColor(item.pct))}
-                        style={{ width: `${item.pct}%` }}
-                      />
-                    </div>
-                    <span className={cn('w-10 text-right font-sans text-sm font-semibold tabular-nums', pctColor(item.pct))}>
-                      {item.pct}%
-                    </span>
-                  </div>
-
-                  {Object.keys(item.domains).length > 0 && (
-                    <div className="flex flex-wrap gap-1.5">
-                      {Object.entries(item.domains).map(([d, v]) => (
-                        <span
-                          key={d}
-                          className="rounded-md border border-border bg-muted/50 px-2 py-0.5 text-xs text-muted-foreground"
-                        >
-                          {toTitleCase(d)}: {v.correct}/{v.total}
+              {items.map((item) => {
+                const isConfirming = confirmId === item.quizId
+                const isDeleting = deletingIds.has(item.quizId)
+                return (
+                  <li
+                    key={item.quizId}
+                    className={cn(
+                      'rounded-xl border bg-card p-4 space-y-3 transition-all duration-200',
+                      isConfirming ? 'border-danger/40 bg-danger/5' : 'border-border',
+                      isDeleting && 'opacity-40 pointer-events-none',
+                    )}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs text-muted-foreground">{formatDate(item.date)}</span>
+                      <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                        <span className="rounded-full border border-border px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
+                          {item.difficulty}
                         </span>
-                      ))}
+                        {isConfirming ? (
+                          <div className="flex items-center gap-1.5">
+                            <AlertTriangle className="h-3.5 w-3.5 text-danger flex-shrink-0" />
+                            <button
+                              onClick={() => handleDelete(item.quizId)}
+                              className="rounded-md bg-danger px-2.5 py-1 text-xs font-semibold text-white hover:bg-danger/90 transition-colors"
+                            >
+                              Apagar
+                            </button>
+                            <button
+                              onClick={() => setConfirmId(null)}
+                              className="rounded-md border border-border px-2.5 py-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+                            >
+                              Não
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => handleDelete(item.quizId)}
+                            className="flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-danger/10 hover:text-danger transition-colors"
+                            title="Apagar este quiz"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        )}
+                      </div>
                     </div>
-                  )}
-                </li>
-              ))}
+
+                    <div className="flex items-center gap-3">
+                      <span className={cn('font-sans text-lg font-bold tabular-nums', pctColor(item.pct))}>
+                        {item.score}/{item.total}
+                      </span>
+                      <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
+                        <div
+                          className={cn('h-full rounded-full transition-all duration-500', pctBarColor(item.pct))}
+                          style={{ width: `${item.pct}%` }}
+                        />
+                      </div>
+                      <span className={cn('w-10 text-right font-sans text-sm font-semibold tabular-nums', pctColor(item.pct))}>
+                        {item.pct}%
+                      </span>
+                    </div>
+
+                    {Object.keys(item.domains).length > 0 && (
+                      <div className="flex flex-wrap gap-1.5">
+                        {Object.entries(item.domains).map(([d, v]) => (
+                          <span
+                            key={d}
+                            className="rounded-md border border-border bg-muted/50 px-2 py-0.5 text-xs text-muted-foreground"
+                          >
+                            {toTitleCase(d)}: {v.correct}/{v.total}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </li>
+                )
+              })}
             </ul>
           </>
         )}
