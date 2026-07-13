@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useCallback } from 'react'
+﻿import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ChevronRight, Crown, RotateCcw } from 'lucide-react'
 import { ProgressBar } from '../components/ProgressBar'
@@ -32,6 +32,7 @@ export function Quiz() {
   const [feedback, setFeedback] = useState<ApiFeedback | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [trialExhausted, setTrialExhausted] = useState(false)
+  const sessionQuestionsRef = useRef<string[]>([])
 
   const cert = getCertification(certification)
   const difficulty = DIFFICULTY_MAP[subject] ?? 'easy'
@@ -41,11 +42,14 @@ export function Quiz() {
     setPhase('loading'); setQuestion(null); setSelected(null); setFeedback(null); setError(null); setTrialExhausted(false)
     try {
       const domain = cert.domains[index % cert.domains.length]
-      const q = await generateQuestion(domain, difficulty, certification)
+      const q = await generateQuestion(domain, difficulty, certification, sessionQuestionsRef.current)
+      sessionQuestionsRef.current = [...sessionQuestionsRef.current, q.question].slice(-20)
       setQuestion(q); setPhase('selecting')
     } catch (err) {
       if (err instanceof ApiError && err.code === 'trial_exhausted') {
         setTrialExhausted(true)
+      } else if (err instanceof ApiError) {
+        setError(err.message)
       } else {
         setError('Erro ao gerar pergunta. Tente novamente.')
       }

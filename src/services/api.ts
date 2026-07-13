@@ -2,7 +2,7 @@ import type { ApiQuestion, ApiFeedback, ApiSummary, QuizAnswer, QuizHistoryItem,
 import { getIdToken } from './auth'
 import { getFingerprint } from './fingerprint'
 
-const API_URL = import.meta.env.VITE_API_URL ?? ''
+const API_URL = import.meta.env.DEV ? '/api' : (import.meta.env.VITE_API_URL ?? '')
 const TIMEOUT_MS = 30_000
 
 const HTTP_MESSAGES: Record<number, string> = {
@@ -64,12 +64,13 @@ export async function generateQuestion(
   domain: string,
   difficulty: string,
   certification = 'clf-c02',
+  recentQuestions: string[] = [],
 ): Promise<ApiQuestion> {
   const fingerprint = await getFingerprint()
   const res = await apiFetch(`${API_URL}/generate-question`, {
     method: 'POST',
     headers: await authHeaders(),
-    body: JSON.stringify({ domain, difficulty, certification, fingerprint }),
+    body: JSON.stringify({ domain, difficulty, certification, fingerprint, recentQuestions }),
   })
   return res.json() as Promise<ApiQuestion>
 }

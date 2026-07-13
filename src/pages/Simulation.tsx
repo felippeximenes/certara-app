@@ -120,13 +120,41 @@ function SimConfig() {
 function SimRunning() {
   const {
     certification, questions, selectedAnswers, currentIndex,
-    timeRemaining, setQuestion, setAnswer, goTo, tick, finish,
+    timeRemaining, setQuestion, setAnswer, goTo, tick, finish, reset,
   } = useSimulationStore()
 
   const cert = getCertification(certification)
   const fetchingRef = useRef<Set<number>>(new Set())
   const [confirmFinish, setConfirmFinish] = useState(false)
   const [loadingQ, setLoadingQ] = useState(false)
+
+  // Anti-cheat: detect tab switch / window hide
+  const [tabViolation, setTabViolation] = useState(false)
+  const violationCount = useRef(0)
+  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const [countdown, setCountdown] = useState(30)
+
+  useEffect(() => {
+    function onVisibilityChange() {
+      if (!document.hidden) return
+      violationCount.current++
+      setCountdown(30)
+      setTabViolation(true)
+    }
+    document.addEventListener('visibilitychange', onVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', onVisibilityChange)
+  }, [])
+
+  useEffect(() => {
+    if (!tabViolation) return
+    countdownRef.current = setInterval(() => {
+      setCountdown((c) => {
+        if (c <= 1) { finish(); return 0 }
+        return c - 1
+      })
+    }, 1000)
+    return () => { if (countdownRef.current) clearInterval(countdownRef.current) }
+  }, [tabViolation]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Timer
   useEffect(() => {
@@ -141,7 +169,11 @@ function SimRunning() {
     if (fetchingRef.current.has(index)) return
     fetchingRef.current.add(index)
     const domain = cert.domains[index % cert.domains.length]
-    generateQuestion(domain, diffForIndex(index), certification)
+    const recentQuestions = questions
+      .filter((q): q is NonNullable<typeof q> => q !== null)
+      .map(q => q.question)
+      .slice(-20)
+    generateQuestion(domain, diffForIndex(index), certification, recentQuestions)
       .then(q => { setQuestion(index, q); fetchingRef.current.delete(index) })
       .catch(() => fetchingRef.current.delete(index))
   }
@@ -274,6 +306,43 @@ function SimRunning() {
           </p>
         </div>
       </main>
+
+      {/* Tab-switch violation modal */}
+      {tabViolation && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-2xl bg-card p-6 shadow-2xl space-y-4 border border-danger/30">
+            <div className="flex items-center gap-3">
+              <span className="text-3xl">⚠️</span>
+              <div>
+                <h3 className="font-sans text-lg font-bold text-foreground">Violação detectada</h3>
+                <p className="text-xs text-muted-foreground">Saída nº {violationCount.current}</p>
+              </div>
+            </div>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Você saiu da aba durante o simulado. Em um ambiente de prova presencial isso não seria permitido.
+            </p>
+            <div className="rounded-xl bg-danger/10 border border-danger/20 px-4 py-2.5 text-center">
+              <p className="text-xs text-danger font-medium">
+                Encerramento automático em <span className="font-bold text-base">{countdown}s</span>
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => { if (countdownRef.current) clearInterval(countdownRef.current); reset() }}
+                className="flex-1 rounded-xl border border-border py-2.5 text-sm font-medium text-foreground hover:border-primary/40 hover:text-primary transition-colors"
+              >
+                Reiniciar
+              </button>
+              <button
+                onClick={() => { if (countdownRef.current) clearInterval(countdownRef.current); finish() }}
+                className="flex-1 rounded-xl bg-danger py-2.5 text-sm font-bold text-white hover:opacity-90 transition-opacity"
+              >
+                Encerrar agora
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Confirm finish modal */}
       {confirmFinish && (
