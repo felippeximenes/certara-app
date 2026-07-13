@@ -1,12 +1,26 @@
 ﻿import json
 import os
 import re
+import time
 from datetime import datetime, timezone, timedelta
 from decimal import Decimal
 
 import boto3
 from botocore.exceptions import ClientError
 from rag import get_context
+
+_TRANSIENT_CODES = {"ThrottlingException", "ModelTimeoutException", "ServiceUnavailableException", "InternalServerException"}
+
+
+def _converse_with_retry(**kwargs) -> dict:
+    try:
+        return bedrock.converse(**kwargs)
+    except ClientError as exc:
+        if exc.response["Error"]["Code"] in _TRANSIENT_CODES:
+            print(f"[bedrock] transient error {exc.response['Error']['Code']}, retrying in 1s")
+            time.sleep(1)
+            return bedrock.converse(**kwargs)
+        raise
 
 _FP_RE = re.compile(r'^[A-Za-z0-9_\-]{8,128}$')
 
@@ -352,7 +366,7 @@ def lambda_handler(event: dict, _context: object) -> dict:
         seen_questions = db_seen + [q for q in client_seen if q not in db_seen]
 
         context = get_context(domain, difficulty, cert_id)
-        bedrock_response = bedrock.converse(
+        bedrock_response = _converse_with_retry(
             modelId=MODEL_ID,
             system=[{"text": (
                 "Você é um especialista em certificações AWS. "
