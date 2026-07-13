@@ -15,10 +15,10 @@ export default defineConfig(({ mode }) => {
             '/api': {
               target: apiTarget,
               changeOrigin: true,
-              rewrite: (p) => p.replace(/^\/api/, ''),
+              rewrite: (path: string) => path.replace(/^\/api/, ''),
             },
           }
-        : {},
+        : undefined,
     },
     resolve: {
       alias: { '@': path.resolve(__dirname, './src') },

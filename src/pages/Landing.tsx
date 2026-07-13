@@ -122,7 +122,7 @@ const FEATURES = [
     iconColor: 'text-green-600',
     badge: 'Em breve',
   },
-] as const
+]
 
 // ── Steps ─────────────────────────────────────────────────────────────────────
 const STEPS = [

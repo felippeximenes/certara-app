@@ -1,7 +1,7 @@
 ﻿import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import html2canvas from 'html2canvas'
-import { RotateCcw, History, Image, ClipboardCopy, MessageCircle, ExternalLink, Share2, Twitter } from 'lucide-react'
+import { RotateCcw, History, Image, ClipboardCopy, MessageCircle, ExternalLink, Share2 } from 'lucide-react'
 import { SubjectBadge } from '../components/SubjectBadge'
 import { useQuizStore } from '../store/quizStore'
 import { generateSummary, saveQuiz } from '../services/api'
@@ -22,7 +22,7 @@ export function Result() {
   const [loading, setLoading] = useState(true)
   const [copying, setCopying] = useState(false)
   const [copied, setCopied] = useState<'image' | 'text' | null>(null)
-  const shareCardRef = useRef<HTMLDivElement>(null)
+  const shareCardRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     if (!subject) { navigate('/app'); return }
@@ -303,7 +303,9 @@ export function Result() {
             </a>
             <a href={twitterUrl} target="_blank" rel="noopener noreferrer"
               className="flex items-center justify-center gap-2 rounded-xl border border-border bg-card py-2.5 font-sans text-sm font-semibold text-foreground transition-colors hover:border-foreground/40 hover:text-foreground">
-              <Twitter className="h-4 w-4" />
+              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.736l7.737-8.843L2.13 2.25h6.844l4.262 5.632 5.01-5.632zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+              </svg>
               Twitter / X
             </a>
             <button onClick={copyText}
