@@ -3,7 +3,8 @@ import { motion } from 'motion/react'
 
 export interface Testimonial {
   text: string
-  image: string
+  initials: string
+  gradient: string
   name: string
   role: string
 }
@@ -27,7 +28,7 @@ export const TestimonialsColumn = (props: {
       >
         {[...new Array(2).fill(0).map((_, index) => (
           <React.Fragment key={index}>
-            {props.testimonials.map(({ text, image, name, role }, i) => (
+            {props.testimonials.map(({ text, initials, gradient, name, role }, i) => (
               <div
                 key={i}
                 className="rounded-2xl border border-border bg-card p-6 shadow-sm shadow-primary/5 max-w-xs w-full"
@@ -46,13 +47,12 @@ export const TestimonialsColumn = (props: {
 
                 {/* Autor */}
                 <div className="flex items-center gap-3 mt-5">
-                  <img
-                    width={40}
-                    height={40}
-                    src={image}
-                    alt={name}
-                    className="h-10 w-10 rounded-full object-cover ring-2 ring-border"
-                  />
+                  <div
+                    className="h-10 w-10 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 ring-2 ring-border"
+                    style={{ background: gradient }}
+                  >
+                    {initials}
+                  </div>
                   <div>
                     <p className="text-sm font-semibold leading-tight text-foreground">{name}</p>
                     <p className="text-xs leading-tight text-muted-foreground mt-0.5">{role}</p>
