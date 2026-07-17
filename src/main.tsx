@@ -17,7 +17,7 @@ if (import.meta.env.VITE_SENTRY_DSN) {
   })
 }
 
-const cognitoDomain = import.meta.env.VITE_COGNITO_DOMAIN ?? ''
+const cognitoDomain = import.meta.env.VITE_COGNITO_DOMAIN || 'certara-auth.auth.us-east-1.amazoncognito.com'
 
 Amplify.configure({
   Auth: {
