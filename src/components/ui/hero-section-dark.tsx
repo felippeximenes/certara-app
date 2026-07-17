@@ -153,11 +153,11 @@ const HeroSection = React.forwardRef<HTMLDivElement, HeroSectionProps>(
                   !hasTwoCols && 'items-center justify-center',
                 )}>
                   {/* CTA principal — borda animada giratória */}
-                  <div className="relative inline-flex overflow-hidden rounded-full p-[1.5px] isolate">
+                  <div className="relative w-full sm:w-auto flex sm:inline-flex overflow-hidden rounded-full p-[1.5px] isolate">
                     <div className="absolute inset-[-1000%] animate-[spin_2.5s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#DDDEFF_0%,#3B39E8_50%,#DDDEFF_100%)]" />
                     <Link
                       to={ctaHref ?? '/login'}
-                      className="relative z-10 inline-flex items-center justify-center gap-2 rounded-full bg-background px-8 py-3.5 text-sm font-bold text-foreground bg-gradient-to-tr from-primary/15 via-primary/10 to-transparent border border-primary/20 hover:from-primary/25 hover:via-primary/15 transition-all"
+                      className="relative z-10 flex w-full items-center justify-center gap-2 rounded-full bg-background px-8 py-3.5 text-sm font-bold text-foreground bg-gradient-to-tr from-primary/15 via-primary/10 to-transparent border border-primary/20 hover:from-primary/25 hover:via-primary/15 transition-all"
                     >
                       {ctaText}
                       <ChevronRight className="h-4 w-4" />
@@ -168,7 +168,7 @@ const HeroSection = React.forwardRef<HTMLDivElement, HeroSectionProps>(
                   {secondaryCtaText && (
                     <button
                       onClick={onSecondaryCtaClick}
-                      className="rounded-full border border-border px-8 py-3.5 text-sm font-semibold text-muted-foreground hover:border-primary/40 hover:text-primary transition-colors"
+                      className="w-full sm:w-auto rounded-full border border-border px-8 py-3.5 text-sm font-semibold text-muted-foreground hover:border-primary/40 hover:text-primary transition-colors"
                     >
                       {secondaryCtaText}
                     </button>
