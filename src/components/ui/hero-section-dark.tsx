@@ -153,18 +153,16 @@ const HeroSection = React.forwardRef<HTMLDivElement, HeroSectionProps>(
                   !hasTwoCols && 'items-center justify-center',
                 )}>
                   {/* CTA principal — borda animada giratória */}
-                  <span className="relative inline-block overflow-hidden rounded-full p-[1.5px] [transform:translateZ(0)]">
-                    <span className="absolute inset-[-1000%] animate-[spin_2.5s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#DDDEFF_0%,#3B39E8_50%,#DDDEFF_100%)]" />
-                    <div className="inline-flex h-full w-full items-center justify-center rounded-full bg-background backdrop-blur-3xl">
-                      <Link
-                        to={ctaHref ?? '/login'}
-                        className="inline-flex rounded-full items-center justify-center gap-2 bg-gradient-to-tr from-primary/15 via-primary/10 to-transparent border border-primary/20 hover:from-primary/25 hover:via-primary/15 text-foreground font-bold text-sm transition-all py-3.5 px-8"
-                      >
-                        {ctaText}
-                        <ChevronRight className="h-4 w-4" />
-                      </Link>
-                    </div>
-                  </span>
+                  <div className="relative inline-flex overflow-hidden rounded-full p-[1.5px] isolate">
+                    <div className="absolute inset-[-1000%] animate-[spin_2.5s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#DDDEFF_0%,#3B39E8_50%,#DDDEFF_100%)]" />
+                    <Link
+                      to={ctaHref ?? '/login'}
+                      className="relative z-10 inline-flex items-center justify-center gap-2 rounded-full bg-background px-8 py-3.5 text-sm font-bold text-foreground bg-gradient-to-tr from-primary/15 via-primary/10 to-transparent border border-primary/20 hover:from-primary/25 hover:via-primary/15 transition-all"
+                    >
+                      {ctaText}
+                      <ChevronRight className="h-4 w-4" />
+                    </Link>
+                  </div>
 
                   {/* CTA secundário (opcional) */}
                   {secondaryCtaText && (
