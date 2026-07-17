@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuthStore } from '../store/authStore'
 import {
   BookOpen, Brain, TrendingUp, Sparkles, Crown,
   Zap, MessageSquare, Clock, BarChart2, Globe,
@@ -190,9 +191,15 @@ function scaleIn(delay = 0, reduced = false) {
 // ── Componente ────────────────────────────────────────────────────────────────
 export function Landing() {
   const navigate = useNavigate()
+  const email    = useAuthStore((s) => s.email)
+  const loading  = useAuthStore((s) => s.loading)
   const [scrolled, setScrolled]             = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const shouldReduce = useReducedMotion() ?? false
+
+  useEffect(() => {
+    if (!loading && email) navigate('/app', { replace: true })
+  }, [email, loading, navigate])
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20)

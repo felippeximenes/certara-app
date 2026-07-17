@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { fetchAuthSession } from 'aws-amplify/auth'
+import { Hub } from 'aws-amplify/utils'
 import { getCurrentEmail, logout } from '../services/auth'
 
 interface AuthState {
@@ -12,6 +13,19 @@ interface AuthState {
 
 // Prevents StrictMode double-invocation from racing on the OAuth code exchange
 let _initPromise: Promise<void> | null = null
+
+// Hub listener: catches OAuth exchange that completes after URL was already cleaned
+Hub.listen('auth', async ({ payload }) => {
+  if (payload.event === 'signInWithRedirect') {
+    try {
+      const email = await getCurrentEmail()
+      useAuthStore.getState().setEmail(email)
+    } catch {}
+    useAuthStore.setState({ loading: false })
+  } else if (payload.event === 'signInWithRedirect_failure') {
+    useAuthStore.setState({ loading: false })
+  }
+})
 
 export const useAuthStore = create<AuthState>((set) => ({
   email: null,
