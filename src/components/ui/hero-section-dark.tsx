@@ -153,7 +153,7 @@ const HeroSection = React.forwardRef<HTMLDivElement, HeroSectionProps>(
                   !hasTwoCols && 'items-center justify-center',
                 )}>
                   {/* CTA principal — borda animada giratória */}
-                  <span className="relative inline-block overflow-hidden rounded-full p-[1.5px]">
+                  <span className="relative inline-block overflow-hidden rounded-full p-[1.5px] [transform:translateZ(0)]">
                     <span className="absolute inset-[-1000%] animate-[spin_2.5s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#DDDEFF_0%,#3B39E8_50%,#DDDEFF_100%)]" />
                     <div className="inline-flex h-full w-full items-center justify-center rounded-full bg-background backdrop-blur-3xl">
                       <Link
