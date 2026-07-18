@@ -1,6 +1,6 @@
 # Certara
 
-Plataforma de preparação para certificações AWS com questões geradas por Inteligência Artificial, feedback personalizado e sistema de assinatura Premium.
+Plataforma de preparação para certificações AWS com questões geradas por Inteligência Artificial, feedback personalizado e sistema de assinatura Premium!
 
 **Acesse em produção:** [quizzapp-six-cyan.vercel.app](https://quizzapp-six-cyan.vercel.app)
 
