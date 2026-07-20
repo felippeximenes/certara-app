@@ -48,7 +48,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 }))
 
-async function _doInit(set: (s: Partial<{ email: string | null; loading: boolean }>) => void) {
+async function _doInit(set: (s: Partial<{ email: string | null; avatar: string | null; loading: boolean }>) => void) {
   const params = new URLSearchParams(window.location.search)
 
   if (params.has('error')) {
