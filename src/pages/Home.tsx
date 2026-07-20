@@ -189,7 +189,7 @@ function Sidebar({ open, onClose, name, isPremium, onLogout }: SidebarProps) {
           'bg-card border-r border-border shadow-xl',
           'transition-transform duration-300',
           open ? 'translate-x-0' : '-translate-x-full',
-          'lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 lg:z-auto lg:overflow-y-auto lg:shadow-none',
+          'lg:relative lg:h-full lg:translate-x-0 lg:z-auto lg:overflow-y-auto lg:shadow-none lg:flex-shrink-0',
         )}
       >
         {/* Logo */}
@@ -412,7 +412,7 @@ export function Home() {
   ]
 
   return (
-    <div className="min-h-svh flex bg-background text-foreground">
+    <div className="h-svh flex overflow-hidden bg-background text-foreground">
       {showOnboarding && <Onboarding onDone={() => setShowOnboarding(false)} />}
 
       <Sidebar
@@ -423,7 +423,7 @@ export function Home() {
         onLogout={handleLogout}
       />
 
-      <div className="flex-1 min-w-0 flex flex-col">
+      <div className="flex-1 min-w-0 flex flex-col overflow-y-auto">
         {/* Topbar */}
         <header className="sticky top-0 z-30 h-16 flex items-center gap-3 px-4 lg:px-6 border-b border-border bg-card/80 backdrop-blur-sm">
           <button
