@@ -174,6 +174,7 @@ interface SidebarProps {
 
 function Sidebar({ open, onClose, name, isPremium, onLogout }: SidebarProps) {
   const navigate = useNavigate()
+  const avatar   = useAuthStore((s) => s.avatar)
 
   return (
     <>
@@ -250,12 +251,20 @@ function Sidebar({ open, onClose, name, isPremium, onLogout }: SidebarProps) {
 
         {/* User footer */}
         <div className="flex items-center gap-2.5 px-4 py-4 border-t border-border flex-shrink-0">
-          <div
-            className="h-8 w-8 rounded-[10px] flex items-center justify-center text-white text-xs font-bold font-sans flex-shrink-0"
-            style={{ background: 'linear-gradient(135deg, #3B39E8 0%, #2D2BC5 100%)' }}
-          >
-            {name.slice(0, 2).toUpperCase()}
-          </div>
+          {avatar ? (
+            <img
+              src={avatar}
+              alt={name}
+              className="h-8 w-8 rounded-[10px] object-cover flex-shrink-0"
+            />
+          ) : (
+            <div
+              className="h-8 w-8 rounded-[10px] flex items-center justify-center text-white text-xs font-bold font-sans flex-shrink-0"
+              style={{ background: 'linear-gradient(135deg, #3B39E8 0%, #2D2BC5 100%)' }}
+            >
+              {name.slice(0, 2).toUpperCase()}
+            </div>
+          )}
           <div className="flex-1 min-w-0">
             <p className="text-xs font-semibold text-foreground truncate">{name}</p>
             <p className="text-[10px] text-muted-foreground">{isPremium ? 'Plano Premium' : 'Plano Gratuito'}</p>

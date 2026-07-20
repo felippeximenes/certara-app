@@ -1,10 +1,11 @@
 import { create } from 'zustand'
 import { fetchAuthSession } from 'aws-amplify/auth'
 import { Hub } from 'aws-amplify/utils'
-import { getCurrentEmail, logout } from '../services/auth'
+import { getCurrentEmail, getAvatarUrl, logout } from '../services/auth'
 
 interface AuthState {
   email: string | null
+  avatar: string | null
   loading: boolean
   setEmail: (email: string | null) => void
   init: () => Promise<void>
@@ -18,10 +19,11 @@ let _initPromise: Promise<void> | null = null
 Hub.listen('auth', async ({ payload }) => {
   if (payload.event === 'signInWithRedirect') {
     try {
-      const email = await getCurrentEmail()
-      useAuthStore.getState().setEmail(email)
-    } catch {}
-    useAuthStore.setState({ loading: false })
+      const [email, avatar] = await Promise.all([getCurrentEmail(), getAvatarUrl()])
+      useAuthStore.setState({ email, avatar, loading: false })
+    } catch {
+      useAuthStore.setState({ loading: false })
+    }
   } else if (payload.event === 'signInWithRedirect_failure') {
     useAuthStore.setState({ loading: false })
   }
@@ -29,6 +31,7 @@ Hub.listen('auth', async ({ payload }) => {
 
 export const useAuthStore = create<AuthState>((set) => ({
   email: null,
+  avatar: null,
   loading: true,
 
   setEmail: (email) => set({ email }),
@@ -60,8 +63,8 @@ async function _doInit(set: (s: Partial<{ email: string | null; loading: boolean
         const session = await fetchAuthSession()
         const idToken = session.tokens?.idToken?.toString()
         if (idToken) {
-          const email = await getCurrentEmail()
-          set({ email, loading: false })
+          const [email, avatar] = await Promise.all([getCurrentEmail(), getAvatarUrl()])
+          set({ email, avatar, loading: false })
           return
         }
       } catch {
@@ -72,6 +75,6 @@ async function _doInit(set: (s: Partial<{ email: string | null; loading: boolean
     return
   }
 
-  const email = await getCurrentEmail()
-  set({ email, loading: false })
+  const [email, avatar] = await Promise.all([getCurrentEmail(), getAvatarUrl()])
+  set({ email, avatar, loading: false })
 }

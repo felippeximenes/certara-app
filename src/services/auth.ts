@@ -55,13 +55,21 @@ export async function getIdToken(): Promise<string | null> {
 
 export async function getCurrentEmail(): Promise<string | null> {
   try {
-    // signInDetails.loginId is only populated for email/password users.
-    // For federated (Google OAuth) users the email lives in the idToken claims.
     const session = await fetchAuthSession()
     const idToken = session.tokens?.idToken
     if (!idToken) return null
     const email = idToken.payload?.email
     return typeof email === 'string' ? email : null
+  } catch {
+    return null
+  }
+}
+
+export async function getAvatarUrl(): Promise<string | null> {
+  try {
+    const session = await fetchAuthSession()
+    const picture = session.tokens?.idToken?.payload?.picture
+    return typeof picture === 'string' ? picture : null
   } catch {
     return null
   }

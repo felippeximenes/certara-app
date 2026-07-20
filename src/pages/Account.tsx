@@ -9,6 +9,7 @@ const CONFIRM_WORD = 'DELETAR'
 export function Account() {
   const navigate = useNavigate()
   const email = useAuthStore((s) => s.email)
+  const avatar = useAuthStore((s) => s.avatar)
   const signOut = useAuthStore((s) => s.signOut)
 
   const [showModal, setShowModal] = useState(false)
@@ -48,12 +49,20 @@ export function Account() {
         {/* Account info */}
         <section className="bg-card border border-border rounded-[16px] p-5">
           <div className="flex items-center gap-3 mb-4">
-            <div
-              className="h-10 w-10 rounded-[12px] flex items-center justify-center text-white text-sm font-bold font-sans flex-shrink-0"
-              style={{ background: 'linear-gradient(135deg, #3B39E8 0%, #2D2BC5 100%)' }}
-            >
-              {(email ?? 'U').slice(0, 2).toUpperCase()}
-            </div>
+            {avatar ? (
+              <img
+                src={avatar}
+                alt={email ?? 'Usuário'}
+                className="h-10 w-10 rounded-[12px] object-cover flex-shrink-0"
+              />
+            ) : (
+              <div
+                className="h-10 w-10 rounded-[12px] flex items-center justify-center text-white text-sm font-bold font-sans flex-shrink-0"
+                style={{ background: 'linear-gradient(135deg, #3B39E8 0%, #2D2BC5 100%)' }}
+              >
+                {(email ?? 'U').slice(0, 2).toUpperCase()}
+              </div>
+            )}
             <div>
               <p className="text-sm font-semibold text-foreground">{email}</p>
               <p className="text-xs text-muted-foreground">Conta ativa</p>

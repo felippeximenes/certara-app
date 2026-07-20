@@ -69,6 +69,7 @@ function OAuthRedirectHandler() {
 
   useEffect(() => {
     if (isOAuthCallback.current && !loading) {
+      isOAuthCallback.current = false
       navigate(email ? '/app' : '/login', { replace: true })
     }
   }, [email, loading, navigate])
