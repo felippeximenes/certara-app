@@ -1,392 +1,397 @@
-import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useAuthStore } from '../store/authStore'
-import {
-  BookOpen, Brain, TrendingUp, Sparkles, Crown,
-  Zap, MessageSquare, Clock, BarChart2, Globe,
-  Check, X, Menu,
-} from 'lucide-react'
-
+import { useState, useEffect, useRef } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { motion, useReducedMotion } from 'motion/react'
-import { Logo } from '../components/Logo'
-import { TestimonialsColumn } from '../components/ui/testimonials-columns-1'
-import { HeroSection } from '../components/ui/hero-section-dark'
+import { Menu, X as CloseIcon, Crown } from 'lucide-react'
+import { useAuthStore } from '../store/authStore'
 import { HeroScene } from '../components/HeroScene'
-import { FooterSection } from '../components/ui/footer-section'
+import { Logo } from '../components/Logo'
+import { CookieBanner } from '../components/CookieBanner'
 import { BorderBeam } from '../components/ui/border-beam'
 import { cn } from '@/lib/utils'
 
-// ── Depoimentos ───────────────────────────────────────────────────────────────
-const TESTIMONIALS = [
-  {
-    text: 'Passei no CLF-C02 na primeira tentativa após 3 semanas usando o Certara. O feedback instantâneo da IA fez toda a diferença na minha preparação.',
-    initials: 'GA',
-    gradient: 'linear-gradient(145deg,#3B39E8,#2D2BC5)',
-    name: 'Gabriela Alves',
-    role: 'Analista de TI · Aprovada CLF-C02',
-  },
-  {
-    text: 'Nunca tinha estudado para certificação antes. O plano de estudos personalizado me guiou exatamente onde precisava focar. Resultado: aprovado!',
-    initials: 'RM',
-    gradient: 'linear-gradient(145deg,#0D9488,#0F766E)',
-    name: 'Rafael Mendes',
-    role: 'Desenvolvedor Backend · Aprovado CLF-C02',
-  },
-  {
-    text: 'O modo simulado é excelente. Fiz o SAA-C03 sentindo que já conhecia o formato da prova. Aprovado com 850 pontos!',
-    initials: 'CS',
-    gradient: 'linear-gradient(145deg,#7C3AED,#6D28D9)',
-    name: 'Carolina Santos',
-    role: 'Arquiteta de Soluções · Aprovada SAA-C03',
-  },
-  {
-    text: 'As questões geradas por IA são muito próximas das reais. O Certara foi fundamental para conquistar a certificação AWS em tempo recorde.',
-    initials: 'LF',
-    gradient: 'linear-gradient(145deg,#D97706,#B45309)',
-    name: 'Lucas Ferreira',
-    role: 'Engenheiro de Cloud · Aprovado SAA-C03',
-  },
-  {
-    text: 'Tentei outras plataformas antes, mas o Certara se destacou pelo feedback detalhado em cada questão. Entendi o porquê dos meus erros.',
-    initials: 'AC',
-    gradient: 'linear-gradient(145deg,#E11D48,#BE123C)',
-    name: 'Amanda Costa',
-    role: 'DevOps Engineer · Aprovada DVA-C02',
-  },
-  {
-    text: 'O histórico de desempenho me mostrou exatamente meus pontos fracos em Segurança e IAM. Focei nisso e passei no DVA-C02 com folga!',
-    initials: 'TO',
-    gradient: 'linear-gradient(145deg,#4F46E5,#3730A3)',
-    name: 'Thiago Oliveira',
-    role: 'Developer · Aprovado DVA-C02',
-  },
-  {
-    text: 'Em apenas 5 semanas saí do zero e passei no Cloud Practitioner. A sequência de estudos gamificada me manteve motivado até o fim.',
-    initials: 'ML',
-    gradient: 'linear-gradient(145deg,#DB2777,#BE185D)',
-    name: 'Mariana Lima',
-    role: 'Product Manager · Aprovada CLF-C02',
-  },
-  {
-    text: 'O modo simulado com 65 questões cronometradas me preparou mentalmente para a pressão do exame real. Senti muita confiança no dia da prova.',
-    initials: 'PS',
-    gradient: 'linear-gradient(145deg,#0EA5E9,#0284C7)',
-    name: 'Pedro Souza',
-    role: 'SRE Engineer · Aprovado SAA-C03',
-  },
-  {
-    text: 'O Certara tornou o estudo de AWS dinâmico e eficiente. Os flashcards de revisão rápida me ajudaram muito nos dias anteriores ao exame.',
-    initials: 'JN',
-    gradient: 'linear-gradient(145deg,#10B981,#059669)',
-    name: 'Juliana Nunes',
-    role: 'Analista de Cloud · Aprovada CLF-C02',
-  },
-]
-
-const firstColumn  = TESTIMONIALS.slice(0, 3)
-const secondColumn = TESTIMONIALS.slice(3, 6)
-const thirdColumn  = TESTIMONIALS.slice(6, 9)
-
-// ── Features ─────────────────────────────────────────────────────────────────
-const FEATURES = [
-  {
-    icon: Zap,
-    title: 'Questões com IA',
-    desc: 'Geradas dinamicamente pelo Amazon Bedrock, nunca repetidas.',
-    iconBg: 'bg-primary/10',
-    iconColor: 'text-primary',
-  },
-  {
-    icon: MessageSquare,
-    title: 'Feedback instantâneo',
-    desc: 'Explicação detalhada em cada resposta com tópicos de estudo.',
-    iconBg: 'bg-teal-500/10',
-    iconColor: 'text-teal-600',
-  },
-  {
-    icon: Clock,
-    title: 'Modo Simulado',
-    desc: 'Simule a prova real com timer e 65 questões cronometradas.',
-    iconBg: 'bg-amber-500/10',
-    iconColor: 'text-amber-600',
-  },
-  {
-    icon: BarChart2,
-    title: 'Histórico completo',
-    desc: 'Veja sua evolução, pontos fortes e fraquezas ao longo do tempo.',
-    iconBg: 'bg-blue-500/10',
-    iconColor: 'text-blue-600',
-  },
-  {
-    icon: Brain,
-    title: 'Plano de estudos',
-    desc: 'Personalizado com base nos seus erros e desempenho por domínio.',
-    iconBg: 'bg-rose-500/10',
-    iconColor: 'text-rose-600',
-  },
-  {
-    icon: Globe,
-    title: 'Multi-certificações',
-    desc: 'AWS CLF-C02, SAA-C03, DVA-C02. Mais certificações em breve.',
-    iconBg: 'bg-green-500/10',
-    iconColor: 'text-green-600',
-    badge: 'Em breve',
-  },
-]
-
-// ── Steps ─────────────────────────────────────────────────────────────────────
-const STEPS = [
-  { icon: BookOpen,   num: '01', title: 'Escolha sua certificação', desc: 'Selecione entre CLF-C02, SAA-C03 ou DVA-C02 e defina a dificuldade desejada.' },
-  { icon: Sparkles,   num: '02', title: 'Pratique com IA',           desc: 'Responda questões geradas em tempo real com feedback instantâneo após cada resposta.' },
-  { icon: TrendingUp, num: '03', title: 'Acompanhe sua evolução',    desc: 'Analise gráficos de desempenho e receba um plano de estudos personalizado.' },
-]
-
-// ── Planos ────────────────────────────────────────────────────────────────────
-const FREE_FEATURES    = ['5 quizzes por dia', 'Feedback básico']
-const FREE_MISSING     = ['Modo simulado', 'Histórico completo', 'Plano de estudos']
-const PREMIUM_FEATURES = ['Quizzes ilimitados', 'Feedback completo com IA', 'Modo simulado', 'Histórico completo', 'Plano de estudos personalizado']
-
-// ── Trust avatars ─────────────────────────────────────────────────────────────
-const TRUST_AVATARS = [
-  { i: 'GA', bg: 'linear-gradient(145deg,#3B39E8,#2D2BC5)' },
-  { i: 'RM', bg: 'linear-gradient(145deg,#0D9488,#0F766E)' },
-  { i: 'CS', bg: 'linear-gradient(145deg,#F59E0B,#D97706)' },
-  { i: 'LF', bg: 'linear-gradient(145deg,#2563EB,#1D4ED8)' },
-]
-
-// ── Animações ─────────────────────────────────────────────────────────────────
+// ── Animation helpers ─────────────────────────────────────────────────────────
 const EASE = [0.16, 1, 0.3, 1] as const
-const VP   = { once: true, margin: '-80px' } as const
+const VP   = { once: true, margin: '-60px' } as const
 
 function fadeUp(delay = 0, reduced = false) {
   if (reduced) return {}
-  return {
-    initial:     { opacity: 0, y: 20 },
-    whileInView: { opacity: 1, y: 0 },
-    transition:  { duration: 1.0, ease: EASE, delay },
-    viewport:    VP,
-  }
+  return { initial: { opacity: 0, y: 28 }, whileInView: { opacity: 1, y: 0 }, transition: { duration: 0.9, ease: EASE, delay }, viewport: VP }
 }
-
 function slideLeft(delay = 0, reduced = false) {
   if (reduced) return {}
-  return {
-    initial:     { opacity: 0, x: -24 },
-    whileInView: { opacity: 1, x: 0 },
-    transition:  { duration: 0.9, ease: EASE, delay },
-    viewport:    VP,
-  }
+  return { initial: { opacity: 0, x: -40 }, whileInView: { opacity: 1, x: 0 }, transition: { duration: 0.9, ease: EASE, delay }, viewport: VP }
 }
-
 function scaleIn(delay = 0, reduced = false) {
   if (reduced) return {}
-  return {
-    initial:     { opacity: 0, scale: 0.95 },
-    whileInView: { opacity: 1, scale: 1 },
-    transition:  { duration: 0.9, ease: EASE, delay },
-    viewport:    VP,
-  }
+  return { initial: { opacity: 0, scale: 0.93 }, whileInView: { opacity: 1, scale: 1 }, transition: { duration: 0.9, ease: EASE, delay }, viewport: VP }
 }
 
-// ── Componente ────────────────────────────────────────────────────────────────
-export function Landing() {
-  const navigate = useNavigate()
-  const email    = useAuthStore((s) => s.email)
-  const loading  = useAuthStore((s) => s.loading)
-  const [scrolled, setScrolled]             = useState(false)
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const shouldReduce = useReducedMotion() ?? false
+// ── Font shorthands ───────────────────────────────────────────────────────────
+const FG = "'Space Grotesk', system-ui, sans-serif"
+const FM = "'Manrope', system-ui, sans-serif"
+const FI = "'Instrument Serif', Georgia, serif"
 
+// ── Data ──────────────────────────────────────────────────────────────────────
+const STATS = [
+  { num: '12k+', label: 'questões geradas por IA' },
+  { num: '94%',  label: 'taxa de aprovação' },
+  { num: '3',    label: 'certificações AWS' },
+  { num: '4.9',  label: 'avaliação média' },
+]
+
+const STEPS = [
+  { num: '01', title: 'Escolha sua certificação', body: 'Do CLF-C02 ao DVA-C02. A Certara monta a trilha certa para o seu objetivo e nível atual.' },
+  { num: '02', title: 'Pratique com IA', body: 'Questões inéditas geradas pelo Amazon Bedrock, com explicações claras e referência a cada serviço AWS.' },
+  { num: '03', title: 'Acompanhe sua evolução', body: 'O plano se reajusta aos seus pontos fracos. Você chega no dia da prova sabendo exatamente onde está.' },
+]
+
+const FEATURES = [
+  { icon: '⚡', title: 'Questões com IA', body: 'Geradas pelo Amazon Bedrock em tempo real — nunca a mesma questão duas vezes.' },
+  { icon: '💬', title: 'Feedback instantâneo', body: 'Errou? A IA explica o motivo na hora com referência ao serviço AWS correto.' },
+  { icon: '◎',  title: 'Plano adaptativo', body: 'O cronograma se reorganiza a cada sessão, priorizando o que você ainda erra.' },
+  { icon: '⏱',  title: 'Simulados cronometrados', body: 'Reproduza a pressão real do exame antes do dia da prova com 65 questões.' },
+  { icon: '📖', title: 'Histórico completo', body: 'Veja sua evolução, pontos fortes e fraquezas ao longo do tempo de estudo.' },
+  { icon: '📊', title: 'Análise por domínio', body: 'Painéis em tempo real mostram se você já está pronto para a certificação.', dark: true },
+]
+
+const TESTIMONIALS = [
+  { quote: 'Passei no CLF-C02 na primeira tentativa após 3 semanas. O feedback instantâneo fez toda a diferença.', name: 'Gabriela Alves', cert: 'CLF-C02 · Aprovada', initials: 'GA', gradient: 'linear-gradient(145deg,#3B39E8,#2D2BC5)' },
+  { quote: 'O modo simulado é excelente. Fiz o SAA-C03 sentindo que já conhecia o formato da prova. Aprovado com 850!', name: 'Carolina Santos', cert: 'SAA-C03 · Aprovada', initials: 'CS', gradient: 'linear-gradient(145deg,#7C3AED,#6D28D9)' },
+  { quote: 'Em 5 semanas saí do zero e passei no Cloud Practitioner. O plano personalizado me guiou perfeitamente.', name: 'Mariana Lima', cert: 'CLF-C02 · Aprovada', initials: 'ML', gradient: 'linear-gradient(145deg,#DB2777,#BE185D)' },
+  { quote: 'Nunca tinha estudado para certificação. O feedback detalhado me ajudou a entender o porquê de cada erro.', name: 'Rafael Mendes', cert: 'CLF-C02 · Aprovado', initials: 'RM', gradient: 'linear-gradient(145deg,#0D9488,#0F766E)' },
+  { quote: 'As questões geradas por IA são muito próximas das reais. Certara foi fundamental para minha aprovação.', name: 'Lucas Ferreira', cert: 'SAA-C03 · Aprovado', initials: 'LF', gradient: 'linear-gradient(145deg,#D97706,#B45309)' },
+  { quote: 'O histórico de desempenho me mostrou exatamente meus pontos fracos. Focei nisso e passei com folga!', name: 'Thiago Oliveira', cert: 'DVA-C02 · Aprovado', initials: 'TO', gradient: 'linear-gradient(145deg,#4F46E5,#3730A3)' },
+  { quote: 'O plano adaptativo focou nos domínios que eu ignorava. Economizei semanas de estudo desnecessário.', name: 'Amanda Costa', cert: 'DVA-C02 · Aprovada', initials: 'AC', gradient: 'linear-gradient(145deg,#E11D48,#BE123C)' },
+  { quote: 'Simulados cronometrados acabaram com meu nervosismo. No dia da prova já era rotina para mim.', name: 'Pedro Souza', cert: 'SAA-C03 · Aprovado', initials: 'PS', gradient: 'linear-gradient(145deg,#0EA5E9,#0284C7)' },
+  { quote: 'O Certara tornou o estudo de AWS dinâmico e eficiente. Aprovada de primeira no Cloud Practitioner!', name: 'Juliana Nunes', cert: 'CLF-C02 · Aprovada', initials: 'JN', gradient: 'linear-gradient(145deg,#10B981,#059669)' },
+]
+
+const COL_A = [TESTIMONIALS[0], TESTIMONIALS[3], TESTIMONIALS[6]]
+const COL_B = [TESTIMONIALS[1], TESTIMONIALS[4], TESTIMONIALS[7]]
+const COL_C = [TESTIMONIALS[2], TESTIMONIALS[5], TESTIMONIALS[8]]
+
+const NAV_SECTIONS = [
+  { id: 'hero',        label: 'Início' },
+  { id: 'como',        label: 'Como funciona' },
+  { id: 'features',    label: 'Recursos' },
+  { id: 'depoimentos', label: 'Alunos' },
+  { id: 'planos',      label: 'Planos' },
+]
+
+const FREE_FEATURES = ['5 quizzes por dia', 'Feedback básico', '1 simulado por semana']
+const FREE_MISSING  = ['Plano adaptativo', 'Histórico completo']
+const PREMIUM_FEATURES = [
+  'Quizzes ilimitados',
+  'Feedback completo com IA',
+  'Modo simulado',
+  'Histórico completo',
+  'Plano de estudos personalizado',
+]
+
+// ── Testimonial card ──────────────────────────────────────────────────────────
+function TestiCard({ t, variant }: { t: typeof TESTIMONIALS[0]; variant: number }) {
+  const avatarGrad = ['linear-gradient(135deg,#3B39E8,#7C6BFF)', 'linear-gradient(135deg,#7C6BFF,#3B39E8)', 'linear-gradient(135deg,#3B39E8,#9d8fff)'][variant]
+  return (
+    <figure style={{ margin: 0, background: '#fff', border: '1px solid rgba(59,57,232,.1)', borderRadius: 20, padding: 28, boxShadow: '0 1px 3px rgba(12,16,36,.04)' }}>
+      <blockquote style={{ margin: 0, fontFamily: FM, fontSize: 15, lineHeight: 1.65, color: '#232842' }}>
+        "{t.quote}"
+      </blockquote>
+      <figcaption style={{ marginTop: 20, display: 'flex', alignItems: 'center', gap: 12 }}>
+        <span style={{ width: 40, height: 40, borderRadius: '50%', background: t.gradient ?? avatarGrad, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 13, fontWeight: 700, fontFamily: FG }}>
+          {t.initials}
+        </span>
+        <span style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+          <span style={{ fontFamily: FG, fontSize: 14, fontWeight: 600, color: '#0C1024' }}>{t.name}</span>
+          <span style={{ fontFamily: FM, fontSize: 12, fontWeight: 500, color: '#3B39E8' }}>{t.cert}</span>
+        </span>
+      </figcaption>
+    </figure>
+  )
+}
+
+// ── Auto-scroll testimonial column ───────────────────────────────────────────
+function TestiColumn({ items, duration, className }: { items: typeof TESTIMONIALS; duration: number; className?: string }) {
+  const doubled = [...items, ...items]
+  return (
+    <div className={cn('overflow-hidden', className)}>
+      <motion.div
+        animate={{ translateY: '-50%' }}
+        transition={{ duration, repeat: Infinity, ease: 'linear', repeatType: 'loop' }}
+        style={{ display: 'flex', flexDirection: 'column', gap: 20, paddingBottom: 20 }}
+      >
+        {doubled.map((t, i) => <TestiCard key={i} t={t} variant={i % 3} />)}
+      </motion.div>
+    </div>
+  )
+}
+
+// ── Main component ────────────────────────────────────────────────────────────
+export function Landing() {
+  const navigate      = useNavigate()
+  const email         = useAuthStore(s => s.email)
+  const loading       = useAuthStore(s => s.loading)
+  const reduced       = useReducedMotion() ?? false
+  const [mobileOpen,  setMobileOpen]  = useState(false)
+  const [scrolled,    setScrolled]    = useState(false)
+  const [railPct,     setRailPct]     = useState(0)
+  const [activeId,    setActiveId]    = useState('hero')
+  const glowRef = useRef<HTMLDivElement>(null)
+  const gridRef = useRef<HTMLDivElement>(null)
+
+  // Redirect if already logged in
   useEffect(() => {
     if (!loading && email) navigate('/app', { replace: true })
   }, [email, loading, navigate])
 
+  // Scroll → rail fill + navbar + grid parallax
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20)
-    window.addEventListener('scroll', onScroll)
+    const onScroll = () => {
+      const y = window.scrollY
+      const h = document.documentElement.scrollHeight - window.innerHeight
+      setScrolled(y > 40)
+      setRailPct(h > 0 ? (y / h) * 100 : 0)
+      if (gridRef.current) gridRef.current.style.transform = `rotateX(62deg) translateY(${y * 0.15}px)`
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    onScroll()
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  // ── Trust section passada para o hero ────────────────────────────────────
-  const trustSection = (
-    <div className="flex items-center gap-3 pt-2">
-      <div className="flex items-center">
-        {TRUST_AVATARS.map(({ i, bg }, idx) => (
-          <span
-            key={i}
-            className={cn(
-              'flex h-8 w-8 items-center justify-center rounded-full border-2 border-background text-[11px] font-bold text-white font-sans',
-              idx !== 0 && '-ml-2',
-            )}
-            style={{ background: bg }}
-          >
-            {i}
-          </span>
-        ))}
-      </div>
-      <div>
-        <div className="text-amber-400 text-xs tracking-wider">★★★★★</div>
-        <p className="text-xs text-muted-foreground leading-snug">
-          <b className="text-foreground font-bold">+2.400 aprovados</b> confiam no Certara
-        </p>
-      </div>
-    </div>
-  )
+  // IntersectionObserver → active dot
+  useEffect(() => {
+    const obs = new IntersectionObserver(
+      entries => { entries.forEach(e => { if (e.isIntersecting) setActiveId(e.target.id) }) },
+      { rootMargin: '-45% 0px -45% 0px' },
+    )
+    NAV_SECTIONS.forEach(({ id }) => { const el = document.getElementById(id); if (el) obs.observe(el) })
+    return () => obs.disconnect()
+  }, [])
+
+  // Hero glow follows mouse
+  useEffect(() => {
+    const hero = document.getElementById('hero')
+    const glow = glowRef.current
+    if (!hero || !glow) return
+    const move = (e: MouseEvent) => {
+      const r = hero.getBoundingClientRect()
+      const cx = (e.clientX - r.width / 2) / r.width
+      const cy = (e.clientY - r.height / 2) / r.height
+      glow.style.transform = `translateX(-50%) translate(${cx * 40}px,${cy * 26}px)`
+    }
+    const reset = () => { glow.style.transform = 'translateX(-50%)' }
+    hero.addEventListener('mousemove', move)
+    hero.addEventListener('mouseleave', reset)
+    return () => { hero.removeEventListener('mousemove', move); hero.removeEventListener('mouseleave', reset) }
+  }, [])
+
+  const goTo = (id: string) => {
+    setMobileOpen(false)
+    const el = document.getElementById(id)
+    if (el) window.scrollTo({ top: window.scrollY + el.getBoundingClientRect().top - 72, behavior: 'smooth' })
+  }
 
   return (
-    <div className="min-h-svh bg-background text-foreground">
+    <div style={{ position: 'relative', background: '#FBFBFE', color: '#0C1024', overflowX: 'hidden', fontFamily: FM }}>
 
-      {/* ── Navbar ──────────────────────────────────────────────── */}
-      <header className="fixed top-0 left-0 right-0 z-50 pointer-events-none">
-        <div className="mx-auto max-w-7xl px-6 pt-4 pointer-events-auto">
-          <div className={cn(
-            'flex items-center justify-between rounded-2xl border px-5 py-[13px]',
-            'backdrop-blur-[18px] transition-all duration-300',
-            scrolled
-              ? 'bg-white/92 border-[#E2E8FF]/80 shadow-[0_8px_32px_-6px_rgba(59,57,232,0.14)]'
-              : 'bg-white/70 border-white/50 shadow-[0_4px_20px_-4px_rgba(59,57,232,0.06)]',
-          )}>
-            <Logo size="md" />
+      {/* ── Progress rail ─────────────────────────────────── */}
+      <div style={{ position: 'fixed', left: 0, top: 0, bottom: 0, width: 3, background: 'rgba(12,16,36,.06)', zIndex: 70, pointerEvents: 'none' }}>
+        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: `${railPct}%`, background: 'linear-gradient(180deg,#3B39E8,#7C6BFF)', boxShadow: '0 0 14px rgba(59,57,232,.6)', transition: 'height .1s linear' }} />
+      </div>
 
-            {/* Links de navegação */}
-            <nav className="hidden items-center gap-7 md:flex">
-              {[
-                { label: 'Como funciona', href: '#como-funciona' },
-                { label: 'Funcionalidades', href: '#funcionalidades' },
-                { label: 'Preços', href: '#precos' },
-                { label: 'Depoimentos', href: '#depoimentos' },
-              ].map(({ label, href }) => (
-                <a
-                  key={label}
-                  href={href}
-                  onClick={(e) => {
-                    e.preventDefault()
-                    document.querySelector(href)?.scrollIntoView({ behavior: 'smooth' })
-                  }}
-                  className="text-[14px] font-semibold text-muted-foreground hover:text-foreground transition-colors duration-150"
-                >
-                  {label}
-                </a>
-              ))}
-            </nav>
+      {/* ── Section dot nav ───────────────────────────────── */}
+      <nav className="hidden lg:flex" style={{ position: 'fixed', right: 22, top: '50%', transform: 'translateY(-50%)', zIndex: 70, flexDirection: 'column', gap: 20, alignItems: 'flex-end' }}>
+        {NAV_SECTIONS.map(({ id, label }) => {
+          const on = activeId === id
+          return (
+            <button key={id} onClick={() => goTo(id)} style={{ all: 'unset', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ fontFamily: FG, fontSize: 10, fontWeight: 600, letterSpacing: '.18em', textTransform: 'uppercase', color: on ? '#3B39E8' : '#0C1024', opacity: on ? 1 : 0, transition: '.3s' }}>
+                {label}
+              </span>
+              <span style={{ width: on ? 40 : 24, height: 2, background: on ? '#3B39E8' : 'rgba(12,16,36,.25)', borderRadius: 2, transition: '.3s' }} />
+            </button>
+          )
+        })}
+      </nav>
 
-            <div className="hidden items-center gap-3 md:flex">
-              <button
-                onClick={() => navigate('/login')}
-                className="rounded-[10px] border border-[#E4E1F2] px-4 py-2 text-sm font-semibold text-[#1A1626] hover:border-primary/40 hover:text-primary transition-colors"
-              >
-                Entrar
+      {/* ── Navbar ────────────────────────────────────────── */}
+      <header style={{
+        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 60,
+        transition: '.4s cubic-bezier(.16,1,.3,1)',
+        background: scrolled ? 'rgba(251,251,254,.78)' : 'transparent',
+        backdropFilter: scrolled ? 'saturate(180%) blur(18px)' : 'none',
+        WebkitBackdropFilter: scrolled ? 'saturate(180%) blur(18px)' : 'none',
+        boxShadow: scrolled ? '0 1px 0 rgba(12,16,36,.06),0 8px 30px rgba(12,16,36,.05)' : 'none',
+      }}>
+        <div style={{ maxWidth: 1240, margin: '0 auto', padding: scrolled ? '14px 40px' : '22px 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', transition: 'padding .4s cubic-bezier(.16,1,.3,1)' }}>
+          <Logo size="md" />
+
+          <nav className="hidden md:flex" style={{ alignItems: 'center', gap: 36 }}>
+            {(['como', 'features', 'depoimentos', 'planos'] as const).map(id => (
+              <button key={id} onClick={() => goTo(id)} style={{ all: 'unset', cursor: 'pointer', fontFamily: FM, fontSize: 14, fontWeight: 500, color: '#3a4060' }}>
+                {id === 'como' ? 'Como funciona' : id === 'features' ? 'Recursos' : id === 'depoimentos' ? 'Depoimentos' : 'Planos'}
               </button>
-              <button
-                onClick={() => navigate('/login')}
-                className="rounded-[11px] bg-primary px-4 py-[9px] text-sm font-bold text-white hover:bg-primary-hover transition-all shadow-[0_4px_14px_-4px_rgba(59,57,232,0.55)]"
-              >
+            ))}
+          </nav>
+
+          <div className="hidden md:flex" style={{ alignItems: 'center', gap: 12 }}>
+            <button onClick={() => navigate('/login')} style={{ all: 'unset', cursor: 'pointer', fontFamily: FM, fontSize: 14, fontWeight: 600, color: '#3a4060', padding: '10px 18px', borderRadius: 10, border: '1px solid rgba(12,16,36,.12)' }}>
+              Entrar
+            </button>
+            <div style={{ position: 'relative', borderRadius: 12, padding: 1.5, overflow: 'hidden' }}>
+              <div className="absolute inset-[-1000%] animate-[spin_2.5s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#DDDEFF_0%,#3B39E8_50%,#DDDEFF_100%)]" />
+              <button onClick={() => navigate('/login')} style={{ position: 'relative', fontFamily: FM, fontSize: 14, fontWeight: 600, color: '#fff', background: '#3B39E8', padding: '10px 20px', borderRadius: 11, border: 'none', cursor: 'pointer' }}>
                 Começar grátis
               </button>
             </div>
-
-            <button
-              className="md:hidden"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              aria-label="Abrir menu"
-            >
-              <Menu className="h-5 w-5 text-[#6B6780]" />
-            </button>
           </div>
 
-          {mobileMenuOpen && (
-            <div className="mt-2 rounded-2xl border border-[#E4E1F2]/70 bg-white/95 backdrop-blur-[18px] px-4 py-3 space-y-2 md:hidden shadow-[0_8px_32px_-8px_rgba(59,57,232,0.12)]">
-              {[
-                { label: 'Como funciona', href: '#como-funciona' },
-                { label: 'Funcionalidades', href: '#funcionalidades' },
-                { label: 'Preços', href: '#precos' },
-              ].map(({ label, href }) => (
-                <button
-                  key={label}
-                  onClick={() => {
-                    setMobileMenuOpen(false)
-                    document.querySelector(href)?.scrollIntoView({ behavior: 'smooth' })
-                  }}
-                  className="w-full text-left rounded-lg px-3 py-2 text-sm font-semibold text-[#6B6780] hover:text-foreground transition-colors"
-                >
-                  {label}
-                </button>
-              ))}
-              <button onClick={() => navigate('/login')}
-                className="w-full rounded-[11px] border border-[#E4E1F2] py-2.5 text-sm font-semibold text-[#1A1626]">
+          <button className="md:hidden" onClick={() => setMobileOpen(v => !v)} style={{ all: 'unset', cursor: 'pointer', padding: 4 }}>
+            {mobileOpen ? <CloseIcon size={20} /> : <Menu size={20} />}
+          </button>
+        </div>
+
+        {mobileOpen && (
+          <div style={{ background: 'rgba(251,251,254,.98)', backdropFilter: 'blur(12px)', padding: '12px 24px 20px', borderBottom: '1px solid rgba(12,16,36,.06)' }}>
+            {(['como', 'features', 'depoimentos', 'planos'] as const).map((id, i, arr) => (
+              <button key={id} onClick={() => goTo(id)} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '12px 0', fontFamily: FM, fontSize: 15, fontWeight: 500, color: '#3a4060', background: 'none', border: 'none', borderBottom: i < arr.length - 1 ? '1px solid rgba(12,16,36,.05)' : 'none', cursor: 'pointer' }}>
+                {id === 'como' ? 'Como funciona' : id === 'features' ? 'Recursos' : id === 'depoimentos' ? 'Depoimentos' : 'Planos'}
+              </button>
+            ))}
+            <div style={{ marginTop: 16, display: 'flex', gap: 10 }}>
+              <button onClick={() => navigate('/login')} style={{ flex: 1, padding: '11px 0', borderRadius: 10, border: '1px solid rgba(12,16,36,.12)', background: 'transparent', fontFamily: FM, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
                 Entrar
               </button>
-              <button onClick={() => navigate('/login')}
-                className="w-full rounded-[11px] bg-primary py-2.5 text-sm font-bold text-white">
+              <button onClick={() => navigate('/login')} style={{ flex: 1, padding: '11px 0', borderRadius: 10, background: '#3B39E8', color: '#fff', border: 'none', fontFamily: FM, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
                 Começar grátis
               </button>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </header>
 
-      {/* ── Hero ────────────────────────────────────────────────── */}
-      <HeroSection
-        title="Powered by Amazon Bedrock AI"
-        subtitle={{
-          regular: 'A forma mais inteligente de se preparar para ',
-          gradient: 'certificações AWS',
-        }}
-        description="Questões geradas por IA com feedback personalizado e plano de estudos sob medida. Estude no seu ritmo e chegue preparado para o exame."
-        ctaText="Começar grátis"
-        ctaHref="/login"
-        secondaryCtaText="Ver como funciona"
-        onSecondaryCtaClick={() => document.getElementById('como-funciona')?.scrollIntoView({ behavior: 'smooth' })}
-        gridOptions={{ angle: 65, opacity: 0.4, cellSize: 55 }}
-        rightContent={<HeroScene />}
-        belowCtaContent={trustSection}
-      />
+      {/* ── Hero ──────────────────────────────────────────── */}
+      <section id="hero" style={{ position: 'relative', minHeight: '100vh', display: 'flex', alignItems: 'center', overflow: 'hidden', padding: '160px 40px 90px' }}>
+        {/* Radial glow (follows mouse) */}
+        <div ref={glowRef} style={{ position: 'absolute', top: '-10%', left: '50%', transform: 'translateX(-50%)', width: 1100, height: 760, background: 'radial-gradient(ellipse at center,rgba(59,57,232,.22),rgba(124,107,255,.10) 42%,transparent 70%)', pointerEvents: 'none' }} />
 
-      {/* ── Stats ───────────────────────────────────────────────── */}
-      <section className="bg-primary py-14">
-        <div className="mx-auto max-w-7xl px-6">
-          <div className="grid grid-cols-1 divide-y sm:grid-cols-3 sm:divide-y-0 sm:divide-x divide-white/20">
-            {[
-              { num: '10.000+', label: 'questões praticadas' },
-              { num: '3',       label: 'certificações AWS'   },
-              { num: '98%',     label: 'de aprovação'        },
-            ].map(({ num, label }, i) => (
-              <motion.div key={label} className="py-6 text-center sm:py-0 sm:px-8" {...fadeUp(i * 0.1, shouldReduce)}>
-                <p className="font-sans text-5xl font-extrabold text-white tracking-tight">{num}</p>
-                <p className="mt-2 text-sm font-medium text-white/70">{label}</p>
-              </motion.div>
-            ))}
+        {/* Perspective grid — bottom 60% */}
+        <div style={{ position: 'absolute', inset: 0, top: 'auto', height: '60%', bottom: 0, overflow: 'hidden', pointerEvents: 'none', perspective: '340px', opacity: 0.55, WebkitMaskImage: 'linear-gradient(to top,#000 20%,transparent)', maskImage: 'linear-gradient(to top,#000 20%,transparent)' }}>
+          <div ref={gridRef} style={{ position: 'absolute', inset: '-100% 0', transform: 'rotateX(62deg)', backgroundImage: 'linear-gradient(to right,rgba(59,57,232,.35) 1px,transparent 1px),linear-gradient(to bottom,rgba(59,57,232,.35) 1px,transparent 1px)', backgroundSize: '44px 44px', animation: 'gridmove 2.4s linear infinite' }} />
+        </div>
+
+        <div className="grid lg:grid-cols-2 gap-12 items-center" style={{ position: 'relative', maxWidth: 1240, margin: '0 auto', width: '100%', zIndex: 2 }}>
+
+          {/* Left: text + CTAs */}
+          <div>
+            {/* Badge */}
+            <motion.div {...fadeUp(0, reduced)} style={{ display: 'inline-flex', alignItems: 'center', gap: 10, padding: '8px 15px', borderRadius: 100, background: 'rgba(59,57,232,.07)', border: '1px solid rgba(59,57,232,.16)', marginBottom: 28 }}>
+              <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#3B39E8', animation: 'blink 1.8s ease-in-out infinite', flexShrink: 0 }} />
+              <span style={{ fontFamily: FG, fontSize: 12, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: '#3B39E8' }}>
+                Inteligência artificial · AWS
+              </span>
+            </motion.div>
+
+            {/* Heading */}
+            <motion.h1 {...fadeUp(0.08, reduced)} style={{ maxWidth: '14ch', margin: '0 0 28px', fontFamily: FG, fontWeight: 600, fontSize: 'clamp(44px,6.5vw,84px)', lineHeight: 0.98, letterSpacing: '-.035em', color: '#0C1024', textWrap: 'balance' }}>
+              Sua aprovação na{' '}
+              <span style={{ fontFamily: FI, fontWeight: 400, fontStyle: 'italic', letterSpacing: '-.01em', background: 'linear-gradient(180deg,#3B39E8,#7C6BFF)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>
+                certificação AWS
+              </span>
+              , guiada por IA.
+            </motion.h1>
+
+            {/* Description */}
+            <motion.p {...fadeUp(0.16, reduced)} style={{ maxWidth: '50ch', margin: '0 0 40px', fontFamily: FM, fontSize: 'clamp(16px,1.4vw,19px)', fontWeight: 400, lineHeight: 1.65, color: '#4b5170' }}>
+              Questões inéditas geradas por IA, feedback instantâneo e um plano de estudos que se molda a você —
+              do <strong style={{ color: '#0C1024', fontWeight: 600 }}>Cloud Practitioner</strong> ao{' '}
+              <strong style={{ color: '#0C1024', fontWeight: 600 }}>Solutions Architect</strong>.
+            </motion.p>
+
+            {/* CTAs */}
+            <motion.div {...fadeUp(0.24, reduced)} style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', marginBottom: 44 }}>
+              {/* Primary */}
+              <div style={{ position: 'relative', borderRadius: 15, padding: 2, overflow: 'hidden' }}>
+                <div className="absolute inset-[-1000%] animate-[spin_2.5s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#DDDEFF_0%,#3B39E8_50%,#DDDEFF_100%)]" />
+                <Link to="/login" style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 9, background: '#3B39E8', color: '#fff', fontFamily: FM, fontSize: 16, fontWeight: 600, padding: '15px 26px', borderRadius: 13, boxShadow: '0 14px 34px rgba(59,57,232,.34)', textDecoration: 'none' }}>
+                  Começar grátis <span style={{ fontSize: 18 }}>→</span>
+                </Link>
+              </div>
+              {/* Secondary */}
+              <button onClick={() => goTo('como')} style={{ display: 'flex', alignItems: 'center', gap: 10, fontFamily: FM, fontSize: 16, fontWeight: 600, color: '#0C1024', padding: '15px 20px', borderRadius: 13, border: '1px solid rgba(12,16,36,.12)', background: 'transparent', cursor: 'pointer' }}>
+                <span style={{ width: 26, height: 26, borderRadius: '50%', background: 'rgba(59,57,232,.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#3B39E8', fontSize: 12, flexShrink: 0 }}>▶</span>
+                Ver como funciona
+              </button>
+            </motion.div>
+
+            {/* Trust avatars */}
+            <motion.div {...fadeUp(0.32, reduced)} style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+              <div style={{ display: 'flex' }}>
+                {['#c7cbf7', '#a5abf2', '#8288ef'].map((c, i) => (
+                  <span key={c} style={{ width: 34, height: 34, borderRadius: '50%', background: c, border: '2px solid #FBFBFE', marginLeft: i ? -11 : 0 }} />
+                ))}
+                <span style={{ width: 34, height: 34, borderRadius: '50%', background: '#3B39E8', border: '2px solid #FBFBFE', marginLeft: -11, color: '#fff', fontFamily: FM, fontSize: 11, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+9k</span>
+              </div>
+              <p style={{ margin: 0, fontFamily: FM, fontSize: 13, fontWeight: 500, color: '#6b708c', lineHeight: 1.4 }}>
+                Mais de <strong style={{ color: '#0C1024' }}>9.000 alunos</strong> estudando
+                <br />para certificações AWS agora.
+              </p>
+            </motion.div>
           </div>
+
+          {/* Right: HeroScene 3D */}
+          <motion.div {...scaleIn(0.1, reduced)} className="hidden lg:flex justify-center items-center">
+            <HeroScene />
+          </motion.div>
         </div>
       </section>
 
-      {/* ── Como funciona ───────────────────────────────────────── */}
-      <section id="como-funciona" className="py-16 md:py-24">
-        <div className="mx-auto max-w-7xl px-6">
-          <motion.div className="mb-12 text-center" {...fadeUp(0, shouldReduce)}>
-            <h2 className="font-sans text-3xl font-extrabold text-foreground">Simples assim</h2>
-            <p className="mt-2 text-muted-foreground">Do zero à aprovação em 3 passos</p>
-          </motion.div>
-          <div className="grid gap-6 md:grid-cols-3">
-            {STEPS.map(({ icon: Icon, num, title, desc }, i) => (
-              <motion.div key={title} {...slideLeft(i * 0.12, shouldReduce)}>
-                <div className="group relative h-full overflow-hidden rounded-2xl border border-border bg-card p-7 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_44px_-20px_rgba(59,57,232,0.22)] hover:border-transparent">
-                  <div className="mb-5 flex items-start justify-between">
-                    <span className="font-sans text-4xl font-extrabold text-primary/15 leading-none">{num}</span>
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
-                      <Icon className="h-5 w-5 text-primary" />
-                    </div>
+      {/* ── Stats ─────────────────────────────────────────── */}
+      <section id="stats" style={{ position: 'relative', background: 'linear-gradient(120deg,#2422d6,#3B39E8 55%,#5a4df0)', overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(rgba(255,255,255,.08) 1px,transparent 1px)', backgroundSize: '26px 26px', opacity: 0.5 }} />
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-6" style={{ position: 'relative', maxWidth: 1240, margin: '0 auto', padding: '80px 40px' }}>
+          {STATS.map(({ num, label }, i) => (
+            <motion.div key={label} {...fadeUp(i * 0.08, reduced)} style={{ textAlign: 'center' }}>
+              <div style={{ fontFamily: FG, fontSize: 'clamp(36px,5vw,60px)', fontWeight: 600, lineHeight: 1, letterSpacing: '-.03em', color: '#fff' }}>{num}</div>
+              <div style={{ marginTop: 10, fontFamily: FM, fontSize: 14, fontWeight: 500, color: 'rgba(255,255,255,.8)', lineHeight: 1.4 }}>{label}</div>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── Como funciona ─────────────────────────────────── */}
+      <section id="como" style={{ position: 'relative', padding: '130px 40px' }}>
+        <div className="grid gap-16 lg:gap-[70px] lg:grid-cols-[0.9fr_1.6fr] items-start" style={{ maxWidth: 1240, margin: '0 auto' }}>
+
+          {/* Sticky left */}
+          <div className="lg:sticky lg:top-[120px]">
+            <motion.div {...fadeUp(0, reduced)} style={{ fontFamily: FG, fontSize: 12, fontWeight: 600, letterSpacing: '.22em', textTransform: 'uppercase', color: '#3B39E8', marginBottom: 20 }}>
+              Como funciona
+            </motion.div>
+            <motion.h2 {...fadeUp(0.08, reduced)} style={{ margin: '0 0 24px', fontFamily: FG, fontWeight: 600, fontSize: 'clamp(32px,4vw,52px)', lineHeight: 1.02, letterSpacing: '-.03em', color: '#0C1024' }}>
+              Três passos<br />até a{' '}
+              <span style={{ fontFamily: FI, fontStyle: 'italic', fontWeight: 400, color: '#3B39E8' }}>aprovação</span>.
+            </motion.h2>
+            <motion.p {...fadeUp(0.16, reduced)} style={{ margin: 0, fontFamily: FM, fontSize: 17, lineHeight: 1.6, color: '#4b5170', maxWidth: '34ch' }}>
+              Sem cursos intermináveis. A Certara transforma seu tempo de estudo em prática dirigida por dados.
+            </motion.p>
+          </div>
+
+          {/* Step cards */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
+            {STEPS.map((step, i) => (
+              <motion.div
+                key={step.num}
+                {...slideLeft(i * 0.12, reduced)}
+                whileHover={reduced ? undefined : { y: -6, boxShadow: '0 24px 50px rgba(59,57,232,.16)', transition: { duration: 0.3 } }}
+                style={{ position: 'relative', borderRadius: 22, background: '#fff', border: '1px solid rgba(12,16,36,.07)', boxShadow: '0 1px 3px rgba(12,16,36,.04)', padding: '38px 40px', overflow: 'hidden' }}
+              >
+                <BorderBeam size={180} duration={9 + i * 1.5} delay={i * 3} colorFrom="#3B39E8" colorTo="#7C6BFF" borderWidth={1.5} />
+                <div style={{ display: 'flex', gap: 28, alignItems: 'flex-start' }}>
+                  <span style={{ fontFamily: FI, fontSize: 64, lineHeight: 0.8, color: '#3B39E8', flexShrink: 0 }}>{step.num}</span>
+                  <div>
+                    <h3 style={{ margin: '0 0 12px', fontFamily: FG, fontWeight: 600, fontSize: 22, lineHeight: 1.2, letterSpacing: '-.02em', color: '#0C1024' }}>{step.title}</h3>
+                    <p style={{ margin: 0, fontFamily: FM, fontSize: 16, lineHeight: 1.65, color: '#4b5170' }}>{step.body}</p>
                   </div>
-                  <h3 className="font-sans text-[17px] font-bold text-foreground mb-2">{title}</h3>
-                  <p className="text-sm leading-relaxed text-muted-foreground">{desc}</p>
-                  <BorderBeam
-                    size={180}
-                    duration={10}
-                    delay={i * 3}
-                    colorFrom="#3B39E8"
-                    colorTo="#8B5CF6"
-                    borderWidth={1.5}
-                  />
                 </div>
               </motion.div>
             ))}
@@ -394,185 +399,222 @@ export function Landing() {
         </div>
       </section>
 
-      {/* ── Funcionalidades ─────────────────────────────────────── */}
-      <section id="funcionalidades" className="py-16 md:py-24 bg-muted/30">
-        <div className="mx-auto max-w-7xl px-6">
-          <motion.div className="mb-12 text-center" {...fadeUp(0, shouldReduce)}>
-            <h2 className="font-sans text-3xl font-extrabold text-foreground">Tudo que você precisa para passar</h2>
-            <p className="mt-2 text-muted-foreground">Ferramentas pensadas para quem estuda de verdade</p>
-          </motion.div>
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {FEATURES.map(({ icon: Icon, title, desc, iconBg, iconColor, badge }, i) => (
-              <motion.div key={title} {...scaleIn(i * 0.07, shouldReduce)}>
-                <div className="group relative h-full overflow-hidden rounded-2xl border border-border bg-card p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_44px_-20px_rgba(59,57,232,0.18)] hover:border-transparent">
-                  <div className={cn('mb-5 flex h-12 w-12 items-center justify-center rounded-2xl', iconBg)}>
-                    <Icon className={cn('h-6 w-6', iconColor)} />
-                  </div>
-                  <h3 className="font-sans text-[17px] font-bold text-foreground flex items-center gap-2 flex-wrap">
-                    {title}
-                    {badge && (
-                      <span className="text-[10px] font-bold text-green-700 bg-green-500/10 px-2 py-0.5 rounded-full leading-tight">
-                        {badge}
-                      </span>
-                    )}
-                  </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{desc}</p>
-                  <BorderBeam
-                    size={150}
-                    duration={12}
-                    delay={i * 2}
-                    colorFrom="#3B39E8"
-                    colorTo="#8B5CF6"
-                    borderWidth={1.5}
-                  />
+      {/* ── Funcionalidades ───────────────────────────────── */}
+      <section id="features" style={{ position: 'relative', padding: '130px 40px', background: '#F4F4FB' }}>
+        <div style={{ maxWidth: 1240, margin: '0 auto' }}>
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-10" style={{ marginBottom: 64 }}>
+            <div>
+              <motion.div {...fadeUp(0, reduced)} style={{ fontFamily: FG, fontSize: 12, fontWeight: 600, letterSpacing: '.22em', textTransform: 'uppercase', color: '#3B39E8', marginBottom: 20 }}>
+                Recursos
+              </motion.div>
+              <motion.h2 {...fadeUp(0.08, reduced)} style={{ margin: 0, fontFamily: FG, fontWeight: 600, fontSize: 'clamp(32px,4.4vw,56px)', lineHeight: 1, letterSpacing: '-.035em', color: '#0C1024', maxWidth: '16ch' }}>
+                Tudo que a prova exige,{' '}
+                <span style={{ fontFamily: FI, fontStyle: 'italic', fontWeight: 400, color: '#3B39E8' }}>nada</span>
+                {' '}que ela não.
+              </motion.h2>
+            </div>
+            <motion.p {...fadeUp(0.16, reduced)} style={{ margin: 0, fontFamily: FM, fontSize: 17, lineHeight: 1.6, color: '#4b5170', maxWidth: '36ch' }}>
+              Uma plataforma inteira desenhada em torno de um objetivo só: você passar.
+            </motion.p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {FEATURES.map((f, i) => (
+              <motion.div
+                key={f.title}
+                {...scaleIn((i % 3) * 0.09, reduced)}
+                whileHover={reduced || f.dark ? undefined : { y: -6, boxShadow: '0 24px 50px rgba(59,57,232,.16)', transition: { duration: 0.3 } }}
+                style={{ position: 'relative', borderRadius: 22, background: f.dark ? '#0C1024' : '#fff', border: f.dark ? '1px solid #0C1024' : '1px solid rgba(12,16,36,.06)', padding: 34, overflow: 'hidden' }}
+              >
+                {f.dark && (
+                  <div style={{ position: 'absolute', top: -40, right: -40, width: 160, height: 160, background: 'radial-gradient(circle,rgba(124,107,255,.5),transparent 70%)', pointerEvents: 'none' }} />
+                )}
+                {!f.dark && <BorderBeam size={150} duration={10 + i} delay={i * 2} colorFrom="#3B39E8" colorTo="#7C6BFF" borderWidth={1.5} />}
+                <div style={{ position: 'relative', width: 46, height: 46, borderRadius: 13, background: f.dark ? 'rgba(255,255,255,.1)' : 'rgba(59,57,232,.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, marginBottom: 22 }}>
+                  {f.icon}
                 </div>
+                <h3 style={{ position: 'relative', margin: '0 0 10px', fontFamily: FG, fontWeight: 600, fontSize: 20, lineHeight: 1.2, letterSpacing: '-.02em', color: f.dark ? '#fff' : '#0C1024' }}>{f.title}</h3>
+                <p style={{ position: 'relative', margin: 0, fontFamily: FM, fontSize: 15, lineHeight: 1.65, color: f.dark ? 'rgba(255,255,255,.72)' : '#4b5170' }}>{f.body}</p>
               </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── Depoimentos ─────────────────────────────────────────── */}
-      <section id="depoimentos" className="py-16 md:py-24 bg-background relative overflow-hidden">
-        <div className="mx-auto max-w-7xl px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-            viewport={{ once: true }}
-            className="flex flex-col items-center text-center mb-12"
+      {/* ── Depoimentos ───────────────────────────────────── */}
+      <section id="depoimentos" style={{ position: 'relative', padding: '130px 40px', overflow: 'hidden' }}>
+        <div style={{ maxWidth: 1240, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: 70 }}>
+            <motion.div {...fadeUp(0, reduced)} style={{ fontFamily: FG, fontSize: 12, fontWeight: 600, letterSpacing: '.22em', textTransform: 'uppercase', color: '#3B39E8', marginBottom: 20 }}>
+              Quem passou
+            </motion.div>
+            <motion.h2 {...fadeUp(0.08, reduced)} style={{ margin: '0 auto', fontFamily: FG, fontWeight: 600, fontSize: 'clamp(32px,4.4vw,56px)', lineHeight: 1.02, letterSpacing: '-.035em', color: '#0C1024', maxWidth: '18ch' }}>
+              Aprovações reais,{' '}
+              <span style={{ fontFamily: FI, fontStyle: 'italic', fontWeight: 400, color: '#3B39E8' }}>contadas</span>
+              {' '}por quem viveu.
+            </motion.h2>
+          </div>
+
+          <div
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"
+            style={{ height: 640, overflow: 'hidden', WebkitMaskImage: 'linear-gradient(to bottom,transparent,#000 16%,#000 84%,transparent)', maskImage: 'linear-gradient(to bottom,transparent,#000 16%,#000 84%,transparent)' }}
           >
-            <span className="inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary mb-4">
-              Depoimentos
-            </span>
-            <h2 className="font-sans text-3xl font-extrabold text-foreground">
-              Quem já se certificou com o Certara
-            </h2>
-            <p className="mt-3 text-muted-foreground max-w-md">
-              Veja o que dizem os estudantes que passaram nas certificações AWS usando nossa plataforma.
-            </p>
-          </motion.div>
-
-          <div className="flex justify-center gap-5 [mask-image:linear-gradient(to_bottom,transparent,black_20%,black_80%,transparent)] max-h-[640px] overflow-hidden">
-            <TestimonialsColumn testimonials={firstColumn}  duration={18} />
-            <TestimonialsColumn testimonials={secondColumn} className="hidden md:block" duration={22} />
-            <TestimonialsColumn testimonials={thirdColumn}  className="hidden lg:block" duration={20} />
+            <TestiColumn items={COL_A} duration={26} />
+            <TestiColumn items={COL_B} duration={32} className="hidden md:block" />
+            <TestiColumn items={COL_C} duration={29} className="hidden lg:block" />
           </div>
         </div>
       </section>
 
-      {/* ── Planos ──────────────────────────────────────────────── */}
-      <section id="precos" className="py-16 md:py-24 relative overflow-hidden bg-muted/20">
-        {/* Blobs decorativos para glassmorphism */}
-        <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
-          <div className="absolute top-1/4 -left-16 h-80 w-80 rounded-full bg-primary/20 blur-3xl" />
-          <div className="absolute bottom-1/4 -right-16 h-72 w-72 rounded-full bg-violet-500/15 blur-3xl" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-64 w-64 rounded-full bg-primary/8 blur-3xl" />
-        </div>
+      {/* ── Planos ────────────────────────────────────────── */}
+      <section id="planos" style={{ position: 'relative', padding: '130px 40px', background: '#F4F4FB', overflow: 'hidden' }}>
+        {/* Blobs decorativos */}
+        {([
+          { top: '6%',  left: '-6%', bg: 'rgba(59,57,232,.22)', size: 420 },
+          { bottom: '0',left: '44%', bg: 'rgba(124,107,255,.2)', size: 380 },
+          { top: '20%', right: '-4%',bg: 'rgba(59,57,232,.18)', size: 360 },
+        ] as const).map((b, i) => (
+          <div key={i} style={{ position: 'absolute', top: (b as any).top, bottom: (b as any).bottom, left: (b as any).left, right: (b as any).right, width: b.size, height: b.size, borderRadius: '50%', background: b.bg, filter: 'blur(90px)', pointerEvents: 'none', zIndex: 0 }} />
+        ))}
 
-        <div className="mx-auto max-w-7xl px-6">
-          <motion.div className="mb-12 text-center" {...fadeUp(0, shouldReduce)}>
-            <h2 className="font-sans text-3xl font-extrabold text-foreground">Invista no seu futuro</h2>
-            <p className="mt-2 text-muted-foreground">Comece grátis, evolua quando quiser</p>
-          </motion.div>
+        <div style={{ position: 'relative', zIndex: 1, maxWidth: 1080, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: 64 }}>
+            <motion.div {...fadeUp(0, reduced)} style={{ fontFamily: FG, fontSize: 12, fontWeight: 600, letterSpacing: '.22em', textTransform: 'uppercase', color: '#3B39E8', marginBottom: 20 }}>
+              Planos
+            </motion.div>
+            <motion.h2 {...fadeUp(0.08, reduced)} style={{ margin: '0 auto', fontFamily: FG, fontWeight: 600, fontSize: 'clamp(32px,4.4vw,56px)', lineHeight: 1.02, letterSpacing: '-.035em', color: '#0C1024', maxWidth: '16ch' }}>
+              Comece grátis.{' '}
+              <span style={{ fontFamily: FI, fontStyle: 'italic', fontWeight: 400, color: '#3B39E8' }}>Passe</span>
+              {' '}quando quiser.
+            </motion.h2>
+          </div>
 
-          <div className="grid gap-6 md:grid-cols-2 md:max-w-2xl md:mx-auto">
-
-            {/* Plano Gratuito */}
+          <div className="grid md:grid-cols-2 gap-6 items-stretch">
+            {/* Gratuito */}
             <motion.div
-              className="rounded-[18px] border border-border bg-card/80 p-8 backdrop-blur-sm"
-              {...slideLeft(0, shouldReduce)}
+              {...slideLeft(0, reduced)}
+              style={{ borderRadius: 26, background: 'rgba(255,255,255,.65)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,.7)', padding: 44, boxShadow: '0 20px 50px rgba(12,16,36,.06)' }}
             >
-              <p className="font-sans text-xs font-bold uppercase tracking-widest text-muted-foreground">Gratuito</p>
-              <p className="font-sans text-5xl font-extrabold text-foreground mt-2 tracking-tight">R$ 0</p>
-              <p className="text-sm text-muted-foreground mt-1 mb-7">Para começar a estudar hoje.</p>
-              <ul className="space-y-3 mb-8">
-                {FREE_FEATURES.map((label) => (
-                  <li key={label} className="flex items-center gap-2.5 text-sm text-foreground">
-                    <Check className="h-4 w-4 flex-shrink-0 text-green-600" />
-                    {label}
+              <div style={{ fontFamily: FG, fontSize: 13, fontWeight: 600, letterSpacing: '.14em', textTransform: 'uppercase', color: '#6b708c' }}>Gratuito</div>
+              <div style={{ margin: '20px 0 4px', display: 'flex', alignItems: 'baseline', gap: 6 }}>
+                <span style={{ fontFamily: FG, fontSize: 'clamp(40px,5vw,56px)', fontWeight: 600, lineHeight: 1, letterSpacing: '-.03em', color: '#0C1024' }}>R$0</span>
+                <span style={{ fontFamily: FM, fontSize: 15, fontWeight: 500, color: '#6b708c' }}>/ para sempre</span>
+              </div>
+              <p style={{ margin: '8px 0 28px', fontFamily: FM, fontSize: 15, lineHeight: 1.5, color: '#4b5170' }}>Para conhecer o método e começar a praticar.</p>
+              <button onClick={() => navigate('/login')} style={{ display: 'block', width: '100%', textAlign: 'center', fontFamily: FM, fontSize: 15, fontWeight: 600, color: '#0C1024', padding: 15, borderRadius: 13, border: '1px solid rgba(12,16,36,.16)', background: 'transparent', cursor: 'pointer' }}>
+                Criar conta grátis
+              </button>
+              <ul style={{ listStyle: 'none', margin: '28px 0 0', padding: 0, display: 'flex', flexDirection: 'column', gap: 14 }}>
+                {FREE_FEATURES.map(f => (
+                  <li key={f} style={{ display: 'flex', gap: 11, fontFamily: FM, fontSize: 15, color: '#232842' }}>
+                    <span style={{ color: '#3B39E8', fontWeight: 700 }}>✓</span> {f}
                   </li>
                 ))}
-                {FREE_MISSING.map((label) => (
-                  <li key={label} className="flex items-center gap-2.5 text-sm text-muted-foreground/60 line-through">
-                    <X className="h-4 w-4 flex-shrink-0 text-muted-foreground/40" />
-                    {label}
+                {FREE_MISSING.map(f => (
+                  <li key={f} style={{ display: 'flex', gap: 11, fontFamily: FM, fontSize: 15, color: '#9aa0bb', textDecoration: 'line-through' }}>
+                    <span style={{ color: '#c3c7db' }}>–</span> {f}
                   </li>
                 ))}
               </ul>
-              <button
-                onClick={() => navigate('/login')}
-                className="w-full rounded-[10px] border border-border py-3 text-sm font-semibold text-foreground hover:border-primary/40 hover:text-primary transition-colors"
-              >
-                Começar grátis
-              </button>
             </motion.div>
 
-            {/* Plano Premium — glassmorphism + spring */}
+            {/* Premium */}
             <motion.div
-              className="relative cursor-pointer"
-              initial={shouldReduce ? false : { opacity: 0, y: 40, scale: 0.94 }}
+              initial={reduced ? false : { opacity: 0, y: 40, scale: 0.94 }}
               whileInView={{ opacity: 1, y: 0, scale: 1 }}
               viewport={{ once: true, amount: 0.3 }}
               transition={{ type: 'spring', damping: 22, stiffness: 180, delay: 0.1 }}
-              whileHover={shouldReduce ? undefined : { scale: 1.03, y: -6, transition: { type: 'spring', damping: 18, stiffness: 220 } }}
-              whileTap={shouldReduce ? undefined : { scale: 0.95, rotate: 1.7, transition: { duration: 0.15 } }}
+              whileHover={reduced ? undefined : { scale: 1.03, y: -6, transition: { type: 'spring', damping: 18, stiffness: 220 } }}
+              whileTap={reduced ? undefined : { scale: 0.95, rotate: 1.7, transition: { duration: 0.15 } }}
+              style={{ position: 'relative', borderRadius: 26, background: 'linear-gradient(160deg,#2422d6,#3B39E8 60%,#5a4df0)', padding: 44, boxShadow: '0 30px 70px rgba(59,57,232,.4)', overflow: 'hidden', cursor: 'default' }}
             >
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
-                <span className="rounded-full bg-primary px-3 py-1 text-xs font-bold text-white shadow-[0_8px_18px_-6px_rgba(59,57,232,0.6)]">
-                  Mais popular
-                </span>
+              <div style={{ position: 'absolute', top: -30, right: -30, width: 180, height: 180, background: 'radial-gradient(circle,rgba(255,255,255,.28),transparent 70%)', pointerEvents: 'none' }} />
+              <div style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                <div style={{ fontFamily: FG, fontSize: 13, fontWeight: 600, letterSpacing: '.14em', textTransform: 'uppercase', color: 'rgba(255,255,255,.85)' }}>Premium</div>
+                <span style={{ fontFamily: FG, fontSize: 11, fontWeight: 600, letterSpacing: '.1em', textTransform: 'uppercase', color: '#fff', background: 'rgba(255,255,255,.18)', padding: '7px 12px', borderRadius: 100 }}>Mais popular</span>
               </div>
-              <div className="glass-card p-8">
-                <p className="font-sans text-xs font-bold uppercase tracking-widest text-primary">Premium</p>
-                <div className="mt-2 flex items-end gap-1">
-                  <p className="font-sans text-5xl font-extrabold text-foreground tracking-tight">R$ 14,90</p>
-                  <span className="text-sm font-semibold text-muted-foreground mb-1">/mês</span>
-                </div>
-                <p className="text-sm text-muted-foreground mt-1 mb-7">Tudo que você precisa para passar.</p>
-                <ul className="space-y-3 mb-8">
-                  {PREMIUM_FEATURES.map((label) => (
-                    <li key={label} className="flex items-center gap-2.5 text-sm text-foreground">
-                      <Check className="h-4 w-4 flex-shrink-0 text-primary" />
-                      {label}
-                    </li>
-                  ))}
-                </ul>
-                <button
-                  onClick={() => navigate('/login')}
-                  className="w-full rounded-[10px] bg-primary py-3 text-sm font-bold text-white hover:bg-primary-hover transition-colors inline-flex items-center justify-center gap-2"
-                >
-                  <Crown className="h-4 w-4" />
-                  Assinar Premium
-                </button>
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 4 }}>
+                <span style={{ fontFamily: FG, fontSize: 'clamp(40px,5vw,56px)', fontWeight: 600, lineHeight: 1, letterSpacing: '-.03em', color: '#fff' }}>R$14,90</span>
+                <span style={{ fontFamily: FM, fontSize: 15, fontWeight: 500, color: 'rgba(255,255,255,.8)' }}>/ mês</span>
               </div>
+              <p style={{ position: 'relative', margin: '8px 0 28px', fontFamily: FM, fontSize: 15, lineHeight: 1.5, color: 'rgba(255,255,255,.82)' }}>
+                Prática ilimitada e IA adaptativa até você ser aprovado.
+              </p>
+              <button onClick={() => navigate('/login')} style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: '100%', fontFamily: FM, fontSize: 15, fontWeight: 600, color: '#3B39E8', background: '#fff', padding: 15, borderRadius: 13, boxShadow: '0 10px 26px rgba(0,0,0,.16)', border: 'none', cursor: 'pointer' }}>
+                <Crown size={16} /> Assinar Premium
+              </button>
+              <ul style={{ position: 'relative', listStyle: 'none', margin: '28px 0 0', padding: 0, display: 'flex', flexDirection: 'column', gap: 14 }}>
+                {PREMIUM_FEATURES.map(f => (
+                  <li key={f} style={{ display: 'flex', gap: 11, fontFamily: FM, fontSize: 15, color: '#fff' }}>
+                    <span style={{ fontWeight: 700 }}>✓</span> {f}
+                  </li>
+                ))}
+              </ul>
             </motion.div>
           </div>
         </div>
       </section>
 
-      {/* ── CTA final ───────────────────────────────────────────── */}
-      <section className="bg-primary py-20 relative overflow-hidden">
-        <div aria-hidden className="pointer-events-none">
-          <div className="absolute -top-24 right-1/4 h-80 w-80 rounded-full bg-white/10 blur-3xl" />
-          <div className="absolute -bottom-32 left-1/4 h-72 w-72 rounded-full bg-teal-500/25 blur-3xl" />
-        </div>
+      {/* ── CTA final ─────────────────────────────────────── */}
+      <section id="cta" style={{ position: 'relative', padding: '40px 40px 100px' }}>
         <motion.div
-          className="relative mx-auto max-w-2xl px-4 text-center"
-          {...scaleIn(0, shouldReduce)}
+          {...scaleIn(0, reduced)}
+          style={{ position: 'relative', maxWidth: 1160, margin: '0 auto', borderRadius: 34, background: 'linear-gradient(135deg,#0C1024,#1a1a4d 55%,#2422d6)', overflow: 'hidden', padding: 'clamp(56px,7vw,100px) 40px', textAlign: 'center' }}
         >
-          <h2 className="font-sans text-4xl font-extrabold text-white">Pronto para se certificar?</h2>
-          <p className="mt-4 text-lg text-white/70">Comece grátis hoje. Sem cartão de crédito.</p>
-          <button
-            onClick={() => navigate('/login')}
-            className="mt-8 inline-flex items-center gap-2 rounded-xl bg-white px-8 py-4 text-sm font-bold text-primary hover:bg-white/90 hover:-translate-y-px transition-all shadow-[0_8px_24px_-8px_rgba(0,0,0,0.25)]"
-          >
-            Criar conta gratuita →
-          </button>
+          {[{ top: '-20%', left: '8%', bg: 'rgba(124,107,255,.4)' }, { bottom: '-30%', right: '6%', bg: 'rgba(59,57,232,.5)' }].map((b, i) => (
+            <div key={i} style={{ position: 'absolute', top: (b as any).top, bottom: (b as any).bottom, left: (b as any).left, right: (b as any).right, width: 420, height: 420, borderRadius: '50%', background: b.bg, filter: 'blur(100px)', pointerEvents: 'none' }} />
+          ))}
+          <h2 style={{ position: 'relative', margin: '0 auto 24px', maxWidth: '20ch', fontFamily: FG, fontWeight: 600, fontSize: 'clamp(32px,5vw,64px)', lineHeight: 1.02, letterSpacing: '-.035em', color: '#fff' }}>
+            Sua certificação AWS começa{' '}
+            <span style={{ fontFamily: FI, fontStyle: 'italic', fontWeight: 400, background: 'linear-gradient(180deg,#fff,#9d8fff)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>agora</span>.
+          </h2>
+          <p style={{ position: 'relative', margin: '0 auto', maxWidth: '46ch', fontFamily: FM, fontSize: 'clamp(16px,1.4vw,19px)', color: 'rgba(255,255,255,.75)', lineHeight: 1.6 }}>
+            Crie sua conta grátis em menos de um minuto e faça seu primeiro simulado gerado por IA hoje.
+          </p>
+          <div style={{ position: 'relative', margin: '40px 0 0', display: 'flex', justifyContent: 'center', gap: 16, flexWrap: 'wrap' }}>
+            <div style={{ position: 'relative', borderRadius: 15, padding: 2, overflow: 'hidden' }}>
+              <div className="absolute inset-[-1000%] animate-[spin_2.5s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,rgba(157,143,255,.6)_0%,#fff_50%,rgba(157,143,255,.6)_100%)]" />
+              <Link to="/login" style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 9, background: '#fff', color: '#0C1024', fontFamily: FM, fontSize: 16, fontWeight: 600, padding: '16px 30px', borderRadius: 13, textDecoration: 'none' }}>
+                Começar grátis <span>→</span>
+              </Link>
+            </div>
+            <button onClick={() => goTo('planos')} style={{ display: 'flex', alignItems: 'center', fontFamily: FM, fontSize: 16, fontWeight: 600, color: '#fff', padding: '16px 26px', borderRadius: 13, border: '1px solid rgba(255,255,255,.25)', background: 'transparent', cursor: 'pointer' }}>
+              Ver planos
+            </button>
+          </div>
         </motion.div>
       </section>
 
-      <FooterSection />
+      {/* ── Footer ────────────────────────────────────────── */}
+      <footer style={{ borderTop: '1px solid rgba(12,16,36,.08)', padding: '64px 40px 48px' }}>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-10" style={{ maxWidth: 1240, margin: '0 auto' }}>
+          <div className="md:col-span-1">
+            <Logo size="md" />
+            <p style={{ margin: '18px 0 0', maxWidth: '32ch', fontFamily: FM, fontSize: 14, lineHeight: 1.6, color: '#6b708c' }}>
+              Certificações AWS com inteligência artificial. Estude com propósito, passe com confiança.
+            </p>
+          </div>
+          {[
+            { title: 'Produto',         links: [['Recursos', '#features'], ['Planos', '#planos'], ['Como funciona', '#como']] },
+            { title: 'Certificações',   links: [['Cloud Practitioner', '/login'], ['Solutions Architect', '/login'], ['Developer Associate', '/login']] },
+            { title: 'Empresa',         links: [['Termos de Uso', '/termos'], ['Privacidade', '/privacidade'], ['Contato', '#']] },
+          ].map(col => (
+            <div key={col.title}>
+              <div style={{ fontFamily: FG, fontSize: 12, fontWeight: 600, letterSpacing: '.14em', textTransform: 'uppercase', color: '#0C1024', marginBottom: 16 }}>{col.title}</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
+                {col.links.map(([label, href]) => (
+                  <a key={label} href={href} style={{ fontFamily: FM, fontSize: 14, fontWeight: 500, color: '#6b708c', textDecoration: 'none' }}>{label}</a>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+        <div style={{ maxWidth: 1240, margin: '48px auto 0', paddingTop: 24, borderTop: '1px solid rgba(12,16,36,.06)', fontFamily: FM, fontSize: 13, fontWeight: 500, color: '#9aa0bb' }}>
+          © 2026 Certara · Não afiliado à Amazon Web Services.
+        </div>
+      </footer>
+
+      <CookieBanner />
     </div>
   )
 }
