@@ -159,10 +159,10 @@ function Sidebar({ open, onClose, name, isPremium, onLogout }: SidebarProps) {
       <aside
         className={cn(
           'fixed top-0 bottom-0 left-0 z-50 flex flex-col transition-transform duration-300',
-          'lg:relative lg:h-full lg:translate-x-0 lg:z-auto lg:flex-shrink-0',
+          'lg:sticky lg:top-0 lg:translate-x-0 lg:z-auto lg:flex-shrink-0 lg:overflow-y-auto',
           open ? 'translate-x-0' : '-translate-x-full',
         )}
-        style={{ width: 248, background: '#fff', borderRight: '1px solid rgba(12,16,36,.07)', padding: '22px 18px' }}
+        style={{ width: 248, height: '100svh', background: '#fff', borderRight: '1px solid rgba(12,16,36,.07)', padding: '22px 18px' }}
       >
         {/* Logo */}
         <div className="flex items-center gap-2.5 px-2">
@@ -324,7 +324,7 @@ export function Home() {
   ]
 
   return (
-    <div className="h-svh flex overflow-hidden" style={{ background: '#f6f6fb' }}>
+    <div className="min-h-svh flex" style={{ background: '#f6f6fb' }}>
       {showOnboarding && <Onboarding onDone={() => setShowOnboarding(false)} />}
 
       <Sidebar
@@ -335,7 +335,7 @@ export function Home() {
         onLogout={handleLogout}
       />
 
-      <main style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
+      <main style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
 
         {/* ── Header ──────────────────────────────────────────────────── */}
         <header
