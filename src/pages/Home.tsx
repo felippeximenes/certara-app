@@ -391,7 +391,7 @@ export function Home() {
         </header>
 
         {/* ── Content ─────────────────────────────────────────────────── */}
-        <div style={{ padding: '26px 34px 60px', maxWidth: 1520, width: '100%' }}>
+        <div style={{ padding: '26px 34px 60px', width: '100%' }}>
 
           {/* Greeting */}
           <div>
