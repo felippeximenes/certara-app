@@ -129,7 +129,6 @@ function TestiColumn({ items, duration, className }: { items: typeof TESTIMONIAL
 export function Landing() {
   const navigate      = useNavigate()
   const email         = useAuthStore(s => s.email)
-  const loading       = useAuthStore(s => s.loading)
   const reduced       = useReducedMotion() ?? false
   const [mobileOpen,  setMobileOpen]  = useState(false)
   const [scrolled,    setScrolled]    = useState(false)
