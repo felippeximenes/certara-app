@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ChevronRight, Crown, RotateCcw } from 'lucide-react'
 import { ProgressBar } from '../components/ProgressBar'
@@ -6,8 +6,10 @@ import { useQuizStore } from '../store/quizStore'
 import { generateQuestion, evaluateAnswer, ApiError } from '../services/api'
 import { getCertification } from '../data/certifications'
 import { trackEvent } from '../services/analytics'
-import { cn } from '@/lib/utils'
 import type { ApiQuestion, ApiFeedback } from '../types/quiz'
+
+const FM = "'Manrope', system-ui, sans-serif"
+const FG = "'Space Grotesk', system-ui, sans-serif"
 
 const TOTAL = 10
 const LETTERS = ['A', 'B', 'C', 'D']
@@ -62,10 +64,8 @@ export function Quiz() {
     fetchQuestion(0)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Ref keeps handleAnswer/handleNext fresh inside the keydown listener
   const actionsRef = useRef({ handleAnswer: () => {}, handleNext: () => {} } as { handleAnswer: () => void; handleNext: () => void })
 
-  // A-D / 1-4 to select, Enter to confirm or advance
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
@@ -123,28 +123,20 @@ export function Quiz() {
     return 'idle'
   }
 
-  const optionClass = {
-    idle: 'border-border bg-card hover:border-primary/40 hover:bg-primary/5',
-    selected: 'border-primary bg-primary/10',
-    correct: 'border-success bg-success/10 text-success',
-    wrong: 'border-danger bg-danger/10 text-danger',
-  }
-
   if (trialExhausted) return (
-    <div className="flex min-h-svh flex-col items-center justify-center gap-4 p-6 text-center">
-      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/15">
-        <Crown className="h-7 w-7 text-primary" />
+    <div className="flex min-h-svh flex-col items-center justify-center gap-5 p-6 text-center" style={{ background: '#f6f6fb' }}>
+      <div style={{ width: 64, height: 64, borderRadius: 18, background: 'rgba(59,57,232,.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#3B39E8', margin: '0 auto' }}>
+        <Crown className="h-7 w-7" />
       </div>
-      <div className="space-y-1">
-        <p className="font-sans text-base font-bold text-foreground">Teste gratuito utilizado</p>
-        <p className="text-sm text-muted-foreground">
-          Você já realizou seu quiz gratuito.<br />
-          Assine o Premium para continuar estudando.
+      <div>
+        <p style={{ font: `700 18px/1.3 ${FG}`, color: '#0C1024', margin: '0 0 6px' }}>Teste gratuito utilizado</p>
+        <p style={{ font: `400 14px/1.6 ${FM}`, color: '#6b708c' }}>
+          Você já realizou seu quiz gratuito.<br />Assine o Premium para continuar estudando.
         </p>
       </div>
       <button
         onClick={() => navigate('/assinatura')}
-        className="flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary-hover transition-colors"
+        style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#3B39E8', color: '#fff', font: `600 14px/1 ${FM}`, padding: '14px 24px', borderRadius: 12, border: 'none', cursor: 'pointer' }}
       >
         <Crown className="h-4 w-4" /> Ver planos Premium
       </button>
@@ -152,71 +144,114 @@ export function Quiz() {
   )
 
   if (error) return (
-    <div className="flex min-h-svh flex-col items-center justify-center gap-4 p-4">
-      <p role="alert" aria-live="assertive" className="text-sm text-muted-foreground">{error}</p>
-      <button onClick={() => fetchQuestion(currentQ)} className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white">
+    <div className="flex min-h-svh flex-col items-center justify-center gap-4 p-4" style={{ background: '#f6f6fb' }}>
+      <p role="alert" className="text-sm text-muted-foreground">{error}</p>
+      <button onClick={() => fetchQuestion(currentQ)} style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#3B39E8', color: '#fff', font: `600 13px/1 ${FM}`, padding: '10px 18px', borderRadius: 10, border: 'none', cursor: 'pointer' }}>
         <RotateCcw className="h-4 w-4" /> Tentar novamente
       </button>
     </div>
   )
 
   return (
-    <div className="flex min-h-svh flex-col bg-background">
-      <header className="sticky top-0 z-10 border-b border-border bg-card/80 backdrop-blur-sm">
+    <div className="flex min-h-svh flex-col" style={{ background: '#f6f6fb' }}>
+      {/* Header */}
+      <header
+        className="sticky top-0 z-10"
+        style={{
+          background: 'rgba(246,246,251,.8)',
+          backdropFilter: 'saturate(160%) blur(14px)',
+          WebkitBackdropFilter: 'saturate(160%) blur(14px)',
+          borderBottom: '1px solid rgba(12,16,36,.05)',
+        }}
+      >
         <div className="mx-auto flex max-w-2xl items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-2">
-            <span className="rounded-full border border-border px-2.5 py-1 text-xs font-semibold" style={{ color: cert.color }}>{cert.code}</span>
-            <span className="text-xs text-muted-foreground">{subject}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', padding: '6px 12px', borderRadius: 100, border: '1px solid rgba(12,16,36,.1)', font: `700 12px/1 ${FG}`, color: cert.color, background: '#fff' }}>
+              {cert.code}
+            </span>
+            <span style={{ font: `500 12px/1 ${FM}`, color: '#9aa0bb' }}>{subject}</span>
           </div>
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-2xl flex-1 space-y-6 px-4 py-6">
+      <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-6" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
         {/* Progress */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', font: `500 12px/1 ${FM}`, color: '#9aa0bb' }}>
             <span>Questão {currentQ + 1} de {TOTAL}</span>
             <span>{Math.round(((currentQ + 1) / TOTAL) * 100)}%</span>
           </div>
           <ProgressBar current={currentQ + 1} total={TOTAL} />
         </div>
 
-        {/* Question */}
-        <div className="rounded-xl border border-border bg-card p-5 shadow-sm min-h-[120px]">
+        {/* Question card */}
+        <div style={{ background: '#fff', border: '1px solid rgba(12,16,36,.07)', borderRadius: 20, padding: '24px 28px', minHeight: 120 }}>
           {phase === 'loading' ? (
             <div className="space-y-3">
               <div className="skeleton h-4 w-3/4 rounded" />
               <div className="skeleton h-4 w-full rounded" />
               <div className="skeleton h-4 w-5/6 rounded" />
-              <p className="mt-4 text-xs text-muted-foreground animate-pulse-soft">Gerando questão com IA...</p>
+              <p style={{ marginTop: 16, font: `500 12px/1 ${FM}`, color: '#9aa0bb' }}>Gerando questão com IA...</p>
             </div>
           ) : (
-            <p className="font-sans text-base font-medium leading-relaxed text-foreground">{question?.question}</p>
+            <p style={{ font: `500 16px/1.6 ${FM}`, color: '#0C1024' }}>{question?.question}</p>
           )}
         </div>
 
         {/* Options */}
         {phase !== 'loading' && (
-          <div className="space-y-2.5">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {question?.options.map((option, i) => {
               const state = optionState(i)
+              const bgMap = {
+                idle: '#fff',
+                selected: 'rgba(59,57,232,.07)',
+                correct: 'rgba(34,197,94,.08)',
+                wrong: 'rgba(239,68,68,.07)',
+              }
+              const borderMap = {
+                idle: 'rgba(12,16,36,.08)',
+                selected: '#3B39E8',
+                correct: '#22C55E',
+                wrong: '#EF4444',
+              }
+              const badgeBg = {
+                idle: '#fff',
+                selected: '#3B39E8',
+                correct: '#22C55E',
+                wrong: '#EF4444',
+              }
+              const badgeBorder = {
+                idle: 'rgba(12,16,36,.15)',
+                selected: '#3B39E8',
+                correct: '#22C55E',
+                wrong: '#EF4444',
+              }
+              const badgeColor = {
+                idle: '#9aa0bb',
+                selected: '#fff',
+                correct: '#fff',
+                wrong: '#fff',
+              }
               return (
-                <button key={i} onClick={() => { if (phase === 'selecting') setSelected(i) }}
+                <button
+                  key={i}
+                  onClick={() => { if (phase === 'selecting') setSelected(i) }}
                   disabled={phase === 'evaluating' || phase === 'feedback'}
-                  className={cn(
-                    'w-full flex items-center gap-3 rounded-xl border px-4 py-3.5 text-left text-sm',
-                    'transition-all duration-150 cursor-pointer disabled:cursor-default',
-                    optionClass[state],
-                  )}
+                  style={{
+                    width: '100%', display: 'flex', alignItems: 'center', gap: 14,
+                    background: bgMap[state],
+                    border: `1.5px solid ${borderMap[state]}`,
+                    borderRadius: 14, padding: '14px 18px', textAlign: 'left', cursor: phase === 'feedback' ? 'default' : 'pointer',
+                    transition: 'border-color .15s, background .15s',
+                  }}
                 >
-                  <span className={cn(
-                    'flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border text-xs font-bold',
-                    state === 'idle' && 'border-border text-muted-foreground',
-                    state === 'selected' && 'border-primary bg-primary text-white',
-                    state === 'correct' && 'border-success bg-success text-white',
-                    state === 'wrong' && 'border-danger bg-danger text-white',
-                  )}>{LETTERS[i]}</span>
-                  <span className="font-body text-foreground">{stripLetter(option)}</span>
+                  <span style={{ width: 26, height: 26, borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: badgeBg[state], border: `1.5px solid ${badgeBorder[state]}`, font: `700 12px/1 ${FG}`, color: badgeColor[state] }}>
+                    {LETTERS[i]}
+                  </span>
+                  <span style={{ font: `500 14px/1.5 ${FM}`, color: state === 'wrong' ? '#EF4444' : state === 'correct' ? '#22C55E' : '#0C1024' }}>
+                    {stripLetter(option)}
+                  </span>
                 </button>
               )
             })}
@@ -225,25 +260,29 @@ export function Quiz() {
 
         {/* Feedback */}
         {isAnswered && feedback && (
-          <div className={cn(
-            'rounded-xl border-l-4 p-4 space-y-2 animate-fade-in',
-            feedback.correct ? 'border-l-success bg-success/5' : 'border-l-danger bg-danger/5',
-          )}>
-            <p className={cn('font-sans text-sm font-bold', feedback.correct ? 'text-success' : 'text-danger')}>
+          <div style={{
+            borderRadius: 16, padding: '20px 24px',
+            background: feedback.correct ? 'rgba(34,197,94,.06)' : 'rgba(239,68,68,.06)',
+            border: `1px solid ${feedback.correct ? 'rgba(34,197,94,.2)' : 'rgba(239,68,68,.2)'}`,
+            borderLeft: `4px solid ${feedback.correct ? '#22C55E' : '#EF4444'}`,
+          }}>
+            <p style={{ font: `700 14px/1 ${FG}`, color: feedback.correct ? '#22C55E' : '#EF4444', marginBottom: 10 }}>
               {feedback.correct ? '✓ Correto!' : '✗ Incorreto'}
             </p>
-            <p className="font-body text-sm text-foreground leading-relaxed">{feedback.feedback}</p>
+            <p style={{ font: `400 14px/1.6 ${FM}`, color: '#0C1024' }}>{feedback.feedback}</p>
             {feedback.study_tips.length > 0 && (
-              <ul className="mt-2 space-y-1">
+              <ul style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 4 }}>
                 {feedback.study_tips.map((tip, i) => (
-                  <li key={i} className="flex gap-2 text-xs text-muted-foreground">
-                    <span className="text-accent mt-0.5">›</span>{tip}
+                  <li key={i} style={{ display: 'flex', gap: 8, font: `400 12px/1.5 ${FM}`, color: '#6b708c' }}>
+                    <span style={{ color: '#3B39E8', marginTop: 1 }}>›</span>{tip}
                   </li>
                 ))}
               </ul>
             )}
             {feedback.aws_docs_topic && (
-              <p className="text-xs text-muted-foreground">Tópico: <span className="font-medium text-foreground">{feedback.aws_docs_topic}</span></p>
+              <p style={{ marginTop: 10, font: `500 12px/1 ${FM}`, color: '#9aa0bb' }}>
+                Tópico: <span style={{ color: '#4b5170', fontWeight: 600 }}>{feedback.aws_docs_topic}</span>
+              </p>
             )}
           </div>
         )}
@@ -253,13 +292,13 @@ export function Quiz() {
           <button
             onClick={isAnswered ? handleNext : handleAnswer}
             disabled={(phase === 'selecting' && selected === null) || phase === 'evaluating'}
-            className={cn(
-              'w-full flex items-center justify-center gap-2 rounded-xl py-3.5 font-sans text-sm font-semibold',
-              'transition-all duration-150 disabled:opacity-40',
-              isAnswered
-                ? 'bg-primary text-white hover:bg-primary-hover'
-                : 'bg-primary text-white hover:bg-primary-hover',
-            )}
+            style={{
+              width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+              background: '#3B39E8', color: '#fff', font: `600 15px/1 ${FM}`,
+              padding: '16px 24px', borderRadius: 14, border: 'none', cursor: 'pointer',
+              opacity: (phase === 'selecting' && selected === null) || phase === 'evaluating' ? 0.4 : 1,
+              transition: 'opacity .15s',
+            }}
           >
             {phase === 'evaluating' ? (
               <><div className="h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin" /> Analisando...</>
