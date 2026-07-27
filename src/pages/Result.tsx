@@ -1,7 +1,7 @@
 ﻿import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import html2canvas from 'html2canvas'
-import { RotateCcw, History, Image, ClipboardCopy, MessageCircle, ExternalLink, Share2 } from 'lucide-react'
+import { RotateCcw, History, Image, ClipboardCopy, MessageCircle, ExternalLink, Share2, Home } from 'lucide-react'
 import { SubjectBadge } from '../components/SubjectBadge'
 import { useQuizStore } from '../store/quizStore'
 import { generateSummary, saveQuiz } from '../services/api'
@@ -207,7 +207,7 @@ export function Result() {
             className="flex items-center justify-center gap-2 rounded-xl bg-primary py-3 font-sans text-sm font-semibold text-white hover:bg-primary-hover transition-colors duration-150"
           >
             <RotateCcw className="h-4 w-4" />
-            Jogar Novamente
+            Novo Quiz
           </button>
           <button
             onClick={() => navigate('/historico')}
@@ -215,6 +215,13 @@ export function Result() {
           >
             <History className="h-4 w-4" />
             Ver Histórico
+          </button>
+          <button
+            onClick={() => navigate('/app')}
+            className="col-span-2 flex items-center justify-center gap-2 rounded-xl border border-border bg-card py-3 font-sans text-sm font-semibold text-foreground hover:border-primary/40 hover:text-primary transition-colors duration-150"
+          >
+            <Home className="h-4 w-4" />
+            Voltar ao Dashboard
           </button>
         </div>
 
