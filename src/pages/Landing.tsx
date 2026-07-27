@@ -138,11 +138,6 @@ export function Landing() {
   const glowRef = useRef<HTMLDivElement>(null)
   const gridRef = useRef<HTMLDivElement>(null)
 
-  // Redirect if already logged in
-  useEffect(() => {
-    if (!loading && email) navigate('/app', { replace: true })
-  }, [email, loading, navigate])
-
   // Scroll → rail fill + navbar + grid parallax
   useEffect(() => {
     const onScroll = () => {
@@ -234,13 +229,15 @@ export function Landing() {
           </nav>
 
           <div className="hidden md:flex" style={{ alignItems: 'center', gap: 12 }}>
-            <button onClick={() => navigate('/login')} style={{ all: 'unset', cursor: 'pointer', fontFamily: FM, fontSize: 14, fontWeight: 600, color: '#3a4060', padding: '10px 18px', borderRadius: 10, border: '1px solid rgba(12,16,36,.12)' }}>
-              Entrar
-            </button>
+            {!email && (
+              <button onClick={() => navigate('/login')} style={{ all: 'unset', cursor: 'pointer', fontFamily: FM, fontSize: 14, fontWeight: 600, color: '#3a4060', padding: '10px 18px', borderRadius: 10, border: '1px solid rgba(12,16,36,.12)' }}>
+                Entrar
+              </button>
+            )}
             <div style={{ position: 'relative', borderRadius: 12, padding: 1.5, overflow: 'hidden' }}>
               <div className="absolute inset-[-1000%] animate-[spin_2.5s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#DDDEFF_0%,#3B39E8_50%,#DDDEFF_100%)]" />
-              <button onClick={() => navigate('/login')} style={{ position: 'relative', fontFamily: FM, fontSize: 14, fontWeight: 600, color: '#fff', background: '#3B39E8', padding: '10px 20px', borderRadius: 11, border: 'none', cursor: 'pointer' }}>
-                Começar grátis
+              <button onClick={() => navigate(email ? '/app' : '/login')} style={{ position: 'relative', fontFamily: FM, fontSize: 14, fontWeight: 600, color: '#fff', background: '#3B39E8', padding: '10px 20px', borderRadius: 11, border: 'none', cursor: 'pointer' }}>
+                {email ? 'Ir ao Dashboard' : 'Começar grátis'}
               </button>
             </div>
           </div>
@@ -258,11 +255,13 @@ export function Landing() {
               </button>
             ))}
             <div style={{ marginTop: 16, display: 'flex', gap: 10 }}>
-              <button onClick={() => navigate('/login')} style={{ flex: 1, padding: '11px 0', borderRadius: 10, border: '1px solid rgba(12,16,36,.12)', background: 'transparent', fontFamily: FM, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
-                Entrar
-              </button>
-              <button onClick={() => navigate('/login')} style={{ flex: 1, padding: '11px 0', borderRadius: 10, background: '#3B39E8', color: '#fff', border: 'none', fontFamily: FM, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
-                Começar grátis
+              {!email && (
+                <button onClick={() => navigate('/login')} style={{ flex: 1, padding: '11px 0', borderRadius: 10, border: '1px solid rgba(12,16,36,.12)', background: 'transparent', fontFamily: FM, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+                  Entrar
+                </button>
+              )}
+              <button onClick={() => navigate(email ? '/app' : '/login')} style={{ flex: email ? undefined : 1, width: email ? '100%' : undefined, padding: '11px 0', borderRadius: 10, background: '#3B39E8', color: '#fff', border: 'none', fontFamily: FM, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+                {email ? 'Ir ao Dashboard' : 'Começar grátis'}
               </button>
             </div>
           </div>
@@ -501,7 +500,7 @@ export function Landing() {
                 <span style={{ fontFamily: FM, fontSize: 15, fontWeight: 500, color: '#6b708c' }}>/ para sempre</span>
               </div>
               <p style={{ margin: '8px 0 28px', fontFamily: FM, fontSize: 15, lineHeight: 1.5, color: '#4b5170' }}>Para conhecer o método e começar a praticar.</p>
-              <button onClick={() => navigate('/login')} style={{ display: 'block', width: '100%', textAlign: 'center', fontFamily: FM, fontSize: 15, fontWeight: 600, color: '#0C1024', padding: 15, borderRadius: 13, border: '1px solid rgba(12,16,36,.16)', background: 'transparent', cursor: 'pointer' }}>
+              <button onClick={() => navigate(email ? '/app' : '/login')} style={{ display: 'block', width: '100%', textAlign: 'center', fontFamily: FM, fontSize: 15, fontWeight: 600, color: '#0C1024', padding: 15, borderRadius: 13, border: '1px solid rgba(12,16,36,.16)', background: 'transparent', cursor: 'pointer' }}>
                 Criar conta grátis
               </button>
               <ul style={{ listStyle: 'none', margin: '28px 0 0', padding: 0, display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -540,7 +539,7 @@ export function Landing() {
               <p style={{ position: 'relative', margin: '8px 0 28px', fontFamily: FM, fontSize: 15, lineHeight: 1.5, color: 'rgba(255,255,255,.82)' }}>
                 Prática ilimitada e IA adaptativa até você ser aprovado.
               </p>
-              <button onClick={() => navigate('/login')} style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: '100%', fontFamily: FM, fontSize: 15, fontWeight: 600, color: '#3B39E8', background: '#fff', padding: 15, borderRadius: 13, boxShadow: '0 10px 26px rgba(0,0,0,.16)', border: 'none', cursor: 'pointer' }}>
+              <button onClick={() => navigate(email ? '/app' : '/login')} style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: '100%', fontFamily: FM, fontSize: 15, fontWeight: 600, color: '#3B39E8', background: '#fff', padding: 15, borderRadius: 13, boxShadow: '0 10px 26px rgba(0,0,0,.16)', border: 'none', cursor: 'pointer' }}>
                 <Crown size={16} /> Assinar Premium
               </button>
               <ul style={{ position: 'relative', listStyle: 'none', margin: '28px 0 0', padding: 0, display: 'flex', flexDirection: 'column', gap: 14 }}>
